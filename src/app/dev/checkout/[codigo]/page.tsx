@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -6,7 +6,6 @@ import { Alert } from "@/components/ui/Feedback";
 import { formatMXN } from "@/lib/format";
 import { store } from "@/server/data";
 import { paymentProvider } from "@/server/payments";
-import { applyPaymentUpdate } from "@/server/services/bookings";
 
 export const metadata = { title: "Pago simulado", robots: { index: false } };
 
@@ -26,15 +25,6 @@ export default async function DevCheckout({
   const payment = await store().findPaymentByCheckout(ref);
   if (!payment) notFound();
 
-  async function decide(formData: FormData) {
-    "use server";
-    if (!paymentProvider().simulated || process.env.NODE_ENV === "production") notFound();
-    const status = formData.get("status") === "approved" ? "approved" : "rejected";
-    await applyPaymentUpdate({ checkoutRef: ref, providerRef: `sim-pay-${crypto.randomUUID()}`, status, method: "card" });
-    const back = new URL(regreso, "http://x");
-    redirect(`${back.pathname}?status=${status}`);
-  }
-
   return (
     <main className="mx-auto flex min-h-dvh max-w-flow flex-col justify-center gap-6 px-4 py-12">
       <div className="flex items-center gap-3">
@@ -48,7 +38,9 @@ export default async function DevCheckout({
         Anticipo de la taquiza <span className="font-mono">{codigo}</span>:{" "}
         <strong>{formatMXN(Number(monto))}</strong>
       </p>
-      <form action={decide} className="flex flex-col gap-3 sm:flex-row">
+      <form method="post" action={`/dev/checkout/${codigo}/decidir`} className="flex flex-col gap-3 sm:flex-row">
+        <input type="hidden" name="ref" value={ref} />
+        <input type="hidden" name="regreso" value={regreso} />
         <Button type="submit" name="status" value="approved" size="lg">
           Aprobar pago
         </Button>
