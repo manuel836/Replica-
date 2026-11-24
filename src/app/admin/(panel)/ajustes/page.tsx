@@ -40,6 +40,9 @@ export default async function SettingsPage() {
         <a href="/admin/clientes" className="flex min-h-11 items-center rounded-md border border-border bg-surface px-3 font-semibold text-text">
           Clientes
         </a>
+        <a href="/admin/reportes" className="flex min-h-11 items-center rounded-md border border-border bg-surface px-3 font-semibold text-text">
+          Reportes
+        </a>
         <a href="/admin/equipo" className="flex min-h-11 items-center rounded-md border border-border bg-surface px-3 font-semibold text-text">
           Equipo
         </a>

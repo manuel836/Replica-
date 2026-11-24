@@ -52,9 +52,9 @@ Confirmación automática o manual,ajustes,should,yes,yes,S17 · Build: S17
 Política de cancelación configurable,ajustes,must,yes,yes,S17 · Build: S17
 Plantillas de mensajes de WhatsApp,ajustes,should,no,yes,S17 · Build: S17
 Lista de clientes con historial de taquizas,clientes,could,yes,yes,"Equivale a los perfiles de comensales de OpenTable (S18) · Build: S18; con búsqueda, notas y borrado de datos"
-Exportar taquizas a CSV,admin agenda,could,yes,no,S11
+Exportar taquizas a CSV,admin agenda,could,yes,yes,"Build: /admin/reportes: CSV del mes o de todas (solo el dueño), con BOM para Excel y protegido contra fórmulas"
 Segundo usuario (ayudante) con acceso limitado,admin,could,yes,yes,"Build: Roles y permisos en el servidor; pantalla Equipo (/admin/equipo, solo el dueño) para dar acceso con un correo de invitación y quitarlo (cierra sus sesiones)"
-Reporte de ventas por mes,reportes,could,yes,no,
+Reporte de ventas por mes,reportes,could,yes,yes,"Build: /admin/reportes (solo el dueño): taquizas, vendido, invitados, cobrado, por cobrar y promedio, contra el mes anterior; por paquete; detalle por estado y origen"
 Buscar entre miles de restaurantes,búsqueda,could,yes,skip,Es la red de OpenTable; tu sistema es de un solo negocio
 Mapa y filtros por cocina / precio / zona,búsqueda,could,yes,skip,No aplica a un solo negocio
 Guías editoriales y recomendaciones,descubrimiento,could,yes,skip,Contenido propiedad de OpenTable
