@@ -190,7 +190,8 @@ export async function createBooking(input: CreateInput, opts: { returnUrlFor: (b
   if (input.source === "web") {
     await notifyOwner(
       `Nueva solicitud ${booking.code}`,
-      `${input.customer.name} · ${formatDateLong(booking.eventDate)} ${localTime(booking.startAt, business.timezone)} · ${booking.guests} invitados`,
+      `${input.customer.name} pidió una taquiza para el ${formatDateLong(booking.eventDate)} a las ${localTime(booking.startAt, business.timezone)}, ${booking.guests} invitados.`,
+      { label: "Revisar la solicitud", path: `/admin/t/${booking.id}` },
     );
   }
   return { booking, checkoutUrl };
@@ -204,6 +205,7 @@ async function createDepositCheckout(booking: Booking, returnUrl: string): Promi
     description: `Anticipo taquiza ${booking.code}`,
     expiresAt: booking.holdExpiresAt ?? new Date(Date.now() + HOUR),
     returnUrl,
+    notificationUrl: `${new URL(returnUrl).origin}/api/webhooks/mercadopago`,
   });
   await store().addPayment({
     businessId: booking.businessId,
@@ -249,38 +251,65 @@ export async function startDepositPayment(booking: Booking, returnUrl: string): 
 }
 
 // ---------------------------------------------------------------------------
-// Pagos (lo llama el webhook del proveedor; hoy, la página de pago simulado)
+// Pagos: lo llama el webhook de Mercado Pago (con el pago consultado en su API) o, en
+// desarrollo, el pago simulado. Es idempotente: el mismo aviso dos veces no cambia nada.
 // ---------------------------------------------------------------------------
 
-export async function applyPaymentUpdate(update: {
-  checkoutRef: string;
+export async function applyProviderPayment(p: {
+  bookingId: string;
   providerRef: string;
-  status: "approved" | "rejected";
+  status: "approved" | "rejected" | "refunded";
   method: Payment["method"];
+  amountCents: number;
 }): Promise<Booking | null> {
   const db = store();
-  const payment = await db.findPaymentByCheckout(update.checkoutRef);
-  if (!payment) return null;
-  // Los avisos llegan repetidos: si ya se aplicó, no hacer nada.
-  if (payment.status === "approved" || payment.status === "refunded") return db.getBooking(payment.businessId, payment.bookingId);
-
-  await db.updatePayment(payment.id, {
-    status: update.status,
-    providerRef: update.providerRef,
-    method: update.method,
-    paidAt: update.status === "approved" ? new Date() : null,
-  });
-  const booking = await db.getBooking(payment.businessId, payment.bookingId);
-  if (!booking) return null;
-  await event(booking, "payment", "system", { status: update.status, amountCents: payment.amountCents });
-  if (update.status !== "approved") return booking;
-
   const business = await db.getBusiness();
+  const booking = await db.getBooking(business.id, p.bookingId);
+  if (!booking) return null;
+
+  const known = await db.findPayment("mercadopago", p.providerRef);
+  if (known && known.status === p.status) return booking; // repetido
+  if (p.status === "refunded") {
+    if (known) {
+      await db.updatePayment(known.id, { status: "refunded" });
+      await event(booking, "refund", "system", { amountCents: known.amountCents, source: "provider" });
+    }
+    return booking;
+  }
+  const target = known ?? (await db.findLatestPendingDeposit(booking.id));
+  const payment = target
+    ? await db.updatePayment(target.id, {
+        status: p.status,
+        providerRef: p.providerRef,
+        method: p.method,
+        amountCents: p.amountCents,
+        paidAt: p.status === "approved" ? new Date() : null,
+      })
+    : await db.addPayment({
+        businessId: business.id,
+        bookingId: booking.id,
+        kind: "deposit",
+        method: p.method,
+        provider: "mercadopago",
+        amountCents: p.amountCents,
+        status: p.status,
+        checkoutRef: null,
+        providerRef: p.providerRef,
+        refundOf: null,
+        paidAt: p.status === "approved" ? new Date() : null,
+      });
+  await event(booking, "payment", "system", { status: p.status, amountCents: payment.amountCents });
+  if (p.status !== "approved") return booking;
+
   return db.withDayLock(business.id, [booking.eventDate], async () => {
     const fresh = (await db.getBooking(business.id, booking.id))!;
+    if (p.amountCents < fresh.depositCents) {
+      await notifyOwner(`Pago incompleto en ${fresh.code}`, `Llegó un pago menor al anticipo. Revisa la taquiza.`, { label: "Ver taquiza", path: `/admin/t/${fresh.id}` });
+      return db.updateBooking(business.id, fresh.id, { needsAttention: true });
+    }
     if (fresh.status === "confirmed") return fresh;
     if (!["awaiting_payment", "requested"].includes(fresh.status)) {
-      await notifyOwner(`Pago recibido de ${fresh.code} en estado ${fresh.status}`, "Revisa la taquiza: quizá hay que reembolsar.");
+      await notifyOwner(`Pago recibido de ${fresh.code} en estado ${fresh.status}`, "Revisa la taquiza: quizá hay que reembolsar.", { label: "Ver taquiza", path: `/admin/t/${fresh.id}` });
       return db.updateBooking(business.id, fresh.id, { needsAttention: true });
     }
     const cap = await checkCapacity({
@@ -290,7 +319,7 @@ export async function applyPaymentUpdate(update: {
       excludeBookingId: fresh.id,
     });
     if (cap.conflict && cap.conflict !== "too_soon") {
-      await notifyOwner(`Pago de ${fresh.code} sin lugar`, "El apartado venció y el horario se ocupó. Reagenda o reembolsa.");
+      await notifyOwner(`Pago de ${fresh.code} sin lugar`, "El apartado venció y el horario se ocupó. Reagenda o reembolsa.", { label: "Ver taquiza", path: `/admin/t/${fresh.id}` });
       return db.updateBooking(business.id, fresh.id, { status: "requested", needsAttention: true, holdExpiresAt: null });
     }
     const confirmed = await db.updateBooking(business.id, fresh.id, {
@@ -452,6 +481,7 @@ export async function recordManualPayment(
   kind: "deposit" | "balance",
   method: "cash" | "transfer",
   amountCents: number,
+  recordedBy: string | null = null,
 ): Promise<void> {
   const db = store();
   const business = await db.getBusiness();
@@ -470,6 +500,7 @@ export async function recordManualPayment(
     providerRef: null,
     refundOf: null,
     paidAt: new Date(),
+    recordedBy,
   });
   await event(booking, "payment", "business", { kind, method, amountCents });
 }

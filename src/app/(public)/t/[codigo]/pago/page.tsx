@@ -14,10 +14,10 @@ export default async function PaymentReturn({
   searchParams,
 }: {
   params: Promise<{ codigo: string }>;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; resultado?: string }>;
 }) {
   const { codigo } = await params;
-  const { status } = await searchParams;
+  const { status, resultado } = await searchParams;
   const token = (await cookies()).get(`dg_t_${codigo.toUpperCase()}`)?.value ?? null;
   const d = await customerBooking(codigo, token);
   const wrap = "mx-auto w-full max-w-flow px-4 py-12";
@@ -42,7 +42,7 @@ export default async function PaymentReturn({
       </div>
     );
   }
-  if (status === "rejected") {
+  if (resultado === "rechazado" || status === "rejected") {
     return (
       <div className={wrap}>
         <EmptyState icon={XCircle} title="El pago no pasó" action={<RetryPayment code={d.booking.code} token={token} manageHref={manage} />}>

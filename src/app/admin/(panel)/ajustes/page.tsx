@@ -2,6 +2,12 @@ import type { TemplateKey } from "@/lib/types";
 import { requireAdminPage } from "@/server/auth";
 import { store } from "@/server/data";
 import { DEFAULT_TEMPLATES, TEMPLATE_LABELS } from "@/server/domain/messages";
+import { LogOut } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { cerrarSesionEnTodos } from "@/server/actions/admin";
+import { Alert } from "@/components/ui/Feedback";
+import { emailConfigured } from "@/server/email";
+import { BusinessPhotos } from "./BusinessPhotos";
 import { SettingsForm } from "./SettingsForm";
 
 export const metadata = { title: "Ajustes" };
@@ -9,10 +15,27 @@ export const metadata = { title: "Ajustes" };
 export default async function SettingsPage() {
   await requireAdminPage("owner");
   const b = await store().getBusiness();
+  const dead = await store().listDeadOutbox(b.id);
   const keys = Object.keys(DEFAULT_TEMPLATES) as TemplateKey[];
   return (
     <div className="mx-auto flex max-w-flow flex-col gap-6">
       <h1 className="text-xl text-text">Ajustes</h1>
+      {!emailConfigured() && (
+        <Alert tone="warning" title="Los correos no están configurados">
+          Sin RESEND_API_KEY y EMAIL_FROM no te llegan los avisos de solicitudes nuevas ni el enlace para entrar.
+        </Alert>
+      )}
+      {dead.length > 0 && (
+        <Alert tone="danger" title={`${dead.length} correo(s) no se pudieron mandar`}>
+          <ul className="mt-1 list-disc pl-5">
+            {dead.slice(0, 5).map((d) => (
+              <li key={d.id}>
+                {d.payload.subject} — {d.lastError}
+              </li>
+            ))}
+          </ul>
+        </Alert>
+      )}
       <nav aria-label="Más secciones" className="flex flex-wrap gap-2 text-sm md:hidden">
         <a href="/admin/zonas" className="flex min-h-11 items-center rounded-md border border-border bg-surface px-3 font-semibold text-text">
           Zonas
@@ -21,6 +44,7 @@ export default async function SettingsPage() {
           Clientes
         </a>
       </nav>
+      <BusinessPhotos photos={b.photoPaths} />
       <SettingsForm
         initial={{
           name: b.name,
@@ -42,6 +66,18 @@ export default async function SettingsPage() {
         templateLabels={TEMPLATE_LABELS}
         defaults={DEFAULT_TEMPLATES}
       />
+      <section aria-labelledby="seguridad" className="flex flex-col gap-3 border-t border-border pt-6">
+        <h2 id="seguridad" className="text-lg text-text">
+          Seguridad
+        </h2>
+        <p className="text-sm text-text-muted">Si perdiste tu celular o entraste en una computadora ajena, cierra todas tus sesiones.</p>
+        <form action={cerrarSesionEnTodos}>
+          <Button type="submit" variant="secondary">
+            <LogOut aria-hidden className="size-4" />
+            Cerrar sesión en todos lados
+          </Button>
+        </form>
+      </section>
     </div>
   );
 }

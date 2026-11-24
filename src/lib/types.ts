@@ -1,4 +1,4 @@
-// Tipos del dominio. Siguen replica/schema.sql (nombres en camelCase).
+// Tipos del dominio. Siguen db/migrations/0001_schema.sql (nombres en camelCase).
 // Fechas locales del negocio como "yyyy-MM-dd" y horas como "HH:mm"; instantes como Date (UTC).
 
 export type BookingStatus =
@@ -171,6 +171,8 @@ export interface Payment {
   checkoutRef: string | null;
   providerRef: string | null;
   refundOf: string | null;
+  /** Quién registró un pago manual (admin_users.id). */
+  recordedBy?: string | null;
   paidAt: Date | null;
   createdAt: Date;
 }
@@ -229,6 +231,21 @@ export interface AdminUser {
   businessId: string;
   email: string;
   role: "owner" | "helper";
+  /** Subirla invalida todas las sesiones abiertas ("cerrar sesión en todos lados"). */
+  sessionVersion: number;
+}
+
+export interface OutboxItem {
+  id: string;
+  businessId: string;
+  kind: "email";
+  payload: { to: string; subject: string; html: string; text: string };
+  attempts: number;
+  nextAttemptAt: Date;
+  lastError: string | null;
+  sentAt: Date | null;
+  deadAt: Date | null;
+  createdAt: Date;
 }
 
 /** Motivo por el que un horario no cabe. Igual que capacity_conflict() en schema.sql. */

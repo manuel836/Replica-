@@ -5,10 +5,10 @@ import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Entrar al panel", robots: { index: false } };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; aviso?: string }> }) {
   await connection();
   if (await currentAdmin()) redirect("/admin");
-  const { error } = await searchParams;
+  const { error, aviso } = await searchParams;
   return (
     <main className="flex min-h-dvh items-center justify-center bg-ink px-4 py-12">
       <div className="flex w-full max-w-md flex-col gap-6 rounded-lg bg-surface p-6 shadow-pop">
@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <h1 className="text-xl text-text">Entrar al panel</h1>
           <p className="text-sm text-text-muted">Te mandamos un enlace a tu correo. Sin contraseñas.</p>
         </div>
-        <LoginForm linkError={error === "enlace"} />
+        <LoginForm linkError={error === "enlace"} signedOutEverywhere={aviso === "todas"} />
       </div>
     </main>
   );

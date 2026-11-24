@@ -1,5 +1,7 @@
 import type {
   AdminUser,
+  Conflict,
+  OutboxItem,
   AvailabilityRule,
   BlockedDate,
   Booking,
@@ -25,6 +27,16 @@ export interface BookingFilter {
   to?: string;
   customerId?: string;
   needsAttention?: boolean;
+}
+
+export interface CapacityInput {
+  businessId: string;
+  date: string;
+  start: Date;
+  end: Date;
+  guests: number;
+  travelBufferMin: number;
+  excludeBookingId?: string;
 }
 
 export interface CustomerRow extends Customer {
@@ -89,6 +101,33 @@ export interface DataStore {
 
   findAdminByEmail(email: string): Promise<AdminUser | null>;
   getAdmin(id: string): Promise<AdminUser | null>;
+  bumpSessionVersion(adminId: string): Promise<void>;
+
+  /** Enlaces mágicos: se guarda el hash; consumir es de un solo uso y atómico. */
+  createLoginToken(adminId: string, tokenHash: string, expiresAt: Date): Promise<void>;
+  consumeLoginToken(tokenHash: string): Promise<string | null>;
+
+  /** Cuenta un intento en la ventana actual; false si ya se pasó del máximo. */
+  hitRateLimit(key: string, windowSeconds: number, max: number): Promise<boolean>;
+
+  /** Regla de capacidad decidida por la base (capacity_conflict en Postgres). Llamar dentro de withDayLock. */
+  capacityConflict(input: CapacityInput): Promise<Conflict | null>;
+
+  /** Avisos del proveedor de pagos: false si ese evento ya se había recibido. */
+  recordWebhookEvent(provider: string, eventId: string, topic: string, payload: unknown): Promise<{ id: string; isNew: boolean; processed: boolean }>;
+  markWebhookProcessed(id: string, error?: string | null): Promise<void>;
+  findLatestPendingDeposit(bookingId: string): Promise<Payment | null>;
+
+  enqueueOutbox(item: Pick<OutboxItem, "businessId" | "payload">): Promise<OutboxItem>;
+  listDueOutbox(limit: number): Promise<OutboxItem[]>;
+  updateOutbox(id: string, patch: Partial<Pick<OutboxItem, "attempts" | "nextAttemptAt" | "lastError" | "sentAt" | "deadAt">>): Promise<void>;
+  listDeadOutbox(businessId: string): Promise<OutboxItem[]>;
+
+  /** Borra contadores e enlaces de entrada viejos. Devuelve cuántas filas quitó. */
+  purgeExpired(): Promise<number>;
+
+  startJobRun(name: string): Promise<string>;
+  finishJobRun(id: string, status: "ok" | "failed", detail: Record<string, unknown>, error?: string | null): Promise<void>;
 
   /**
    * Corre `fn` con el candado de esos días tomado (en orden, para no trabarse). En Postgres

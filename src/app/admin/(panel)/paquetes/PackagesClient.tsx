@@ -9,7 +9,8 @@ import { TextareaField, TextField } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toast";
 import { formatMXN } from "@/lib/format";
-import { activarPaquete, guardarPaquete, moverPaquete } from "@/server/actions/settings";
+import { PhotoUpload } from "@/components/PhotoUpload";
+import { activarPaquete, guardarPaquete, moverPaquete, quitarFotoPaquete, subirFotoPaquete } from "@/server/actions/settings";
 
 interface Row {
   id: string;
@@ -21,9 +22,10 @@ interface Row {
   includes: string;
   isActive: boolean;
   pricePerGuestCents: number;
+  photoUrl?: string | null;
 }
 
-const EMPTY: Omit<Row, "id" | "pricePerGuestCents"> = {
+const EMPTY: Omit<Row, "id" | "pricePerGuestCents" | "photoUrl"> = {
   name: "",
   description: "",
   price: "",
@@ -35,7 +37,7 @@ const EMPTY: Omit<Row, "id" | "pricePerGuestCents"> = {
 
 export function PackagesManager({ packages }: { packages: Row[] }) {
   const router = useRouter();
-  const [editing, setEditing] = useState<(Omit<Row, "pricePerGuestCents" | "id"> & { id?: string }) | null>(null);
+  const [editing, setEditing] = useState<(Omit<Row, "pricePerGuestCents" | "id" | "photoUrl"> & { id?: string }) | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof EMPTY) => (e: { target: { value: string } }) => setEditing((x) => x && { ...x, [k]: e.target.value });
@@ -97,7 +99,7 @@ export function PackagesManager({ packages }: { packages: Row[] }) {
         />
         Disponible para agendar
       </label>
-      <p className="text-sm text-text-muted">Foto del paquete: se activa al conectar el almacenamiento de archivos.</p>
+      <p className="text-sm text-text-muted">La foto se sube desde la lista de paquetes.</p>
     </Modal>
   );
 
@@ -115,6 +117,10 @@ export function PackagesManager({ packages }: { packages: Row[] }) {
         <ol className="flex flex-col gap-3">
           {packages.map((p, i) => (
             <li key={p.id} className={`flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center ${p.isActive ? "bg-surface" : "bg-surface-muted"}`}>
+              {p.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.photoUrl} alt={`Foto de ${p.name}`} className="size-16 shrink-0 rounded-md object-cover" />
+              ) : null}
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="font-semibold text-text">
                   {p.name}
@@ -144,7 +150,23 @@ export function PackagesManager({ packages }: { packages: Row[] }) {
                 >
                   {p.isActive ? "Ocultar" : "Mostrar"}
                 </Button>
-                <Button size="sm" variant="secondary" onClick={() => { setErrors({}); setEditing(p); }} aria-label={`Editar ${p.name}`}>
+                <PhotoUpload label={p.photoUrl ? "Cambiar foto" : "Subir foto"} upload={subirFotoPaquete} fields={{ id: p.id }} />
+                {p.photoUrl && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`Quitar foto de ${p.name}`}
+                    onClick={async () => {
+                      const r = await quitarFotoPaquete(p.id);
+                      if (!r.ok) return toast.error(r.error);
+                      toast.success("Foto quitada");
+                      router.refresh();
+                    }}
+                  >
+                    Quitar foto
+                  </Button>
+                )}
+                <Button size="sm" variant="secondary" onClick={() => { setErrors({}); const { photoUrl: _p, pricePerGuestCents: _c, ...rest } = p; void _p; void _c; setEditing(rest); }} aria-label={`Editar ${p.name}`}>
                   <Pencil aria-hidden className="size-4" />
                   Editar
                 </Button>

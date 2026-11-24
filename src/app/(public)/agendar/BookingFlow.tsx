@@ -15,6 +15,7 @@ import { PaymentChoice, type PayMode } from "@/components/ui/PaymentChoice";
 import { PriceSummary } from "@/components/ui/PriceSummary";
 import { StepBar } from "@/components/ui/StepBar";
 import { TimeSlots, type Slot } from "@/components/ui/TimeSlots";
+import { Turnstile } from "@/components/Turnstile";
 import { crearTaquiza } from "@/server/actions/public";
 
 interface Props {
@@ -75,6 +76,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const idempotencyKey = useRef<string>("");
   if (!idempotencyKey.current && typeof crypto !== "undefined") idempotencyKey.current = crypto.randomUUID();
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -185,6 +187,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
       packageId,
       payMode: depositCents > 0 ? payMode : "later",
       acceptPolicies: accept,
+      turnstileToken,
     });
     if (res.ok) {
       window.location.assign(res.redirectTo);
@@ -474,6 +477,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
                 </p>
               )}
             </div>
+            <Turnstile onToken={setTurnstileToken} />
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
               <Button variant="ghost" onClick={() => history.back()} disabled={submitting}>
                 <ArrowLeft aria-hidden className="size-5" />

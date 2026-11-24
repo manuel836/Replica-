@@ -1,7 +1,7 @@
 import "server-only";
 import type { AvailabilityRule, Booking, Business, DayState } from "@/lib/types";
 import { store } from "@/server/data";
-import { capacityConflict, daySlots, dayState, loadsForDate, type Slot } from "@/server/domain/availability";
+import { daySlots, dayState, loadsForDate, type Slot } from "@/server/domain/availability";
 import { addDaysLocal, localToInstant, weekdayOf } from "@/server/domain/time";
 
 export interface DayContext {
@@ -62,7 +62,8 @@ export async function slotsFor(date: string, guests: number, excludeBookingId?: 
 
 /**
  * Revisa si cabe una taquiza. Debe llamarse DENTRO de store().withDayLock(date) para que
- * nadie más tome el lugar entre la revisión y la escritura.
+ * nadie más tome el lugar entre la revisión y la escritura. La decisión es de la base de
+ * datos (capacity_conflict() en Postgres); la capa en memoria usa la misma regla en TypeScript.
  */
 export async function checkCapacity(input: {
   date: string;
@@ -70,22 +71,22 @@ export async function checkCapacity(input: {
   guests: number;
   excludeBookingId?: string;
 }) {
-  const { business, ruleFor, blockedSet, bookings } = await context(input.date, input.date);
-  const rule = ruleFor(input.date);
+  const db = store();
+  const business = await db.getBusiness();
+  const rules = await db.listRules(business.id);
+  const rule = rules.find((r) => r.weekday === weekdayOf(input.date));
   const durationMin = rule?.eventDurationMin ?? 240;
   const travelBufferMin = rule?.travelBufferMin ?? 0;
   const start = localToInstant(input.date, input.time, business.timezone);
   const end = new Date(start.getTime() + durationMin * 60_000);
-  const conflict = capacityConflict({
-    business,
-    rule,
-    blocked: blockedSet.has(input.date),
+  const conflict = await db.capacityConflict({
+    businessId: business.id,
     date: input.date,
     start,
     end,
     guests: input.guests,
     travelBufferMin,
-    loads: loadsForDate(bookings, input.date, new Date(), input.excludeBookingId),
+    excludeBookingId: input.excludeBookingId,
   });
   return { conflict, start, end, travelBufferMin, business };
 }

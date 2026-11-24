@@ -1,25 +1,38 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { randomBytes } from "node:crypto";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { AdminUser } from "@/lib/types";
 import { store } from "./data";
+import { emailConfigured, layout, sendEmail } from "./email";
 import { AppError } from "./errors";
-import { safeEqual, sign } from "./tokens";
+import { safeEqual, sha256, sign } from "./tokens";
 
-// Sesión del panel. Hoy: enlace mágico firmado por la app (en desarrollo se muestra en
-// pantalla). /replica-backend lo cambia por Supabase Auth; requireAdmin() no cambia.
+// Sesión del panel. Entrada con enlace mágico de UN solo uso (se guarda su hash, vence en
+// 15 minutos) mandado por correo. La cookie lleva id, versión de sesión y vencimiento,
+// firmados; subir la versión cierra todas las sesiones de esa persona.
 
 const COOKIE = "dg_admin";
 const SESSION_DAYS = 30;
 const LINK_MINUTES = 15;
 
+export async function clientIp(): Promise<string> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "desconocida";
+}
+
 export async function currentAdmin(): Promise<AdminUser | null> {
   const raw = (await cookies()).get(COOKIE)?.value;
   if (!raw) return null;
-  const [id, exp, sig] = raw.split(".");
-  if (!id || !exp || !sig) return null;
-  if (!safeEqual(sig, sign(`session:${id}:${exp}`)) || Number(exp) < Date.now()) return null;
-  return store().getAdmin(id);
+  const [id, version, exp, sig] = raw.split(".");
+  if (!id || !version || !exp || !sig) return null;
+  if (!safeEqual(sig, sign(`session:${id}:${version}:${exp}`)) || Number(exp) < Date.now()) return null;
+  const db = store();
+  const admin = await db.getAdmin(id);
+  if (!admin || admin.sessionVersion !== Number(version)) return null;
+  // Solo personas de ESTE negocio: un usuario de otro negocio no entra aunque su firma sea válida.
+  const business = await db.getBusiness();
+  return admin.businessId === business.id ? admin : null;
 }
 
 /** Para páginas: sin sesión manda a /admin/entrar. */
@@ -38,21 +51,52 @@ export async function requireAdmin(role?: "owner"): Promise<AdminUser> {
   return admin;
 }
 
-export function loginLink(base: string, admin: AdminUser): string {
-  const exp = Date.now() + LINK_MINUTES * 60_000;
-  const s = sign(`login:${admin.id}:${exp}`);
-  return `${base}/auth/callback?${new URLSearchParams({ u: admin.id, e: String(exp), s })}`;
+/**
+ * Manda el enlace de entrada. Responde igual exista o no el correo. En desarrollo sin
+ * correo configurado devuelve el enlace para mostrarlo en pantalla.
+ */
+export async function requestLoginLink(email: string, base: string): Promise<{ devLink: string | null }> {
+  const db = store();
+  const normalized = email.trim().toLowerCase();
+  if (!(await db.hitRateLimit(`login-ip:${await clientIp()}`, 3600, 20))) {
+    throw new AppError("Demasiados intentos. Espera una hora e intenta de nuevo.", "rate_limit");
+  }
+  // Por correo: el límite se aplica en silencio (no revela si el correo existe).
+  const withinEmailLimit = await db.hitRateLimit(`login-email:${normalized}`, 3600, 5);
+  const admin = withinEmailLimit ? await db.findAdminByEmail(normalized) : null;
+  const business = await db.getBusiness();
+  if (!admin || admin.businessId !== business.id) return { devLink: null };
+
+  const token = randomBytes(32).toString("base64url");
+  await db.createLoginToken(admin.id, sha256(token), new Date(Date.now() + LINK_MINUTES * 60_000));
+  const link = `${base}/auth/confirmar?t=${token}`;
+  const body = layout({
+    title: "Tu enlace para entrar al panel",
+    paragraphs: [`Toca el botón para entrar al panel de ${business.name}. Funciona una sola vez y vence en ${LINK_MINUTES} minutos.`],
+    button: { label: "Entrar al panel", url: link },
+    footer: "Si no lo pediste, ignora este correo: nadie puede entrar sin este enlace.",
+  });
+  await sendEmail(business.id, { to: admin.email, subject: "Entra a tu panel de D' Garden Tacos", ...body });
+  const dev = !emailConfigured() && process.env.NODE_ENV !== "production";
+  return { devLink: dev ? link : null };
 }
 
-export function verifyLoginLink(u: string, e: string, s: string): boolean {
-  return safeEqual(s, sign(`login:${u}:${e}`)) && Number(e) > Date.now();
+/** Cambia un enlace de entrada por una sesión. null si no sirve (usado, vencido o falso). */
+export async function consumeLoginLink(token: string): Promise<AdminUser | null> {
+  if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return null;
+  const db = store();
+  const adminId = await db.consumeLoginToken(sha256(token));
+  if (!adminId) return null;
+  const admin = await db.getAdmin(adminId);
+  const business = await db.getBusiness();
+  return admin && admin.businessId === business.id ? admin : null;
 }
 
-export function sessionCookie(adminId: string) {
+export function sessionCookie(admin: AdminUser) {
   const exp = Date.now() + SESSION_DAYS * 86_400_000;
   return {
     name: COOKIE,
-    value: `${adminId}.${exp}.${sign(`session:${adminId}:${exp}`)}`,
+    value: `${admin.id}.${admin.sessionVersion}.${exp}.${sign(`session:${admin.id}:${admin.sessionVersion}:${exp}`)}`,
     options: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -65,4 +109,10 @@ export function sessionCookie(adminId: string) {
 
 export async function endSession(): Promise<void> {
   (await cookies()).delete(COOKIE);
+}
+
+/** Cierra todas las sesiones de esta persona (en todos sus dispositivos). */
+export async function endAllSessions(admin: AdminUser): Promise<void> {
+  await store().bumpSessionVersion(admin.id);
+  await endSession();
 }

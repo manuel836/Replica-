@@ -8,6 +8,7 @@ import { store } from "@/server/data";
 import { DEFAULT_TEMPLATES } from "@/server/domain/messages";
 import { AppError, run } from "@/server/errors";
 import { dateStr, fieldErrors, toMexicanE164 } from "@/server/validation";
+import { deleteImage, uploadImage } from "@/server/storage";
 
 // Configuración del negocio (S14 a S18). Solo el dueño, salvo las notas de clientes.
 
@@ -328,5 +329,61 @@ export async function anonimizarCliente(id: string) {
       });
     }
     revalidatePath("/admin/clientes");
+  });
+}
+
+// ---------------- Fotos (S15 y S17) ----------------
+
+export async function subirFotoPaquete(formData: FormData) {
+  return run(async () => {
+    const admin = await requireAdmin("owner");
+    const id = String(formData.get("id") ?? "");
+    const db = store();
+    const p = await db.getPackage(admin.businessId, id);
+    if (!p) throw new AppError("Ese paquete ya no existe.");
+    const url = await uploadImage(formData.get("foto") as File, "paquetes");
+    await db.savePackage(admin.businessId, { ...p, photoPath: url });
+    if (p.photoPath) await deleteImage(p.photoPath);
+    revalidatePath("/admin/paquetes");
+    revalidatePath("/");
+    return { url };
+  });
+}
+
+export async function quitarFotoPaquete(id: string) {
+  return run(async () => {
+    const admin = await requireAdmin("owner");
+    const db = store();
+    const p = await db.getPackage(admin.businessId, id);
+    if (!p) throw new AppError("Ese paquete ya no existe.");
+    await db.savePackage(admin.businessId, { ...p, photoPath: null });
+    if (p.photoPath) await deleteImage(p.photoPath);
+    revalidatePath("/admin/paquetes");
+    revalidatePath("/");
+  });
+}
+
+export async function subirFotoNegocio(formData: FormData) {
+  return run(async () => {
+    const admin = await requireAdmin("owner");
+    const db = store();
+    const b = await db.getBusiness();
+    if (b.photoPaths.length >= 8) throw new AppError("Máximo 8 fotos. Quita una antes de subir otra.");
+    const url = await uploadImage(formData.get("foto") as File, "negocio");
+    await db.updateBusiness(admin.businessId, { photoPaths: [...b.photoPaths, url] });
+    revalidatePath("/", "layout");
+    return { url };
+  });
+}
+
+export async function quitarFotoNegocio(url: string) {
+  return run(async () => {
+    const admin = await requireAdmin("owner");
+    const db = store();
+    const b = await db.getBusiness();
+    if (!b.photoPaths.includes(url)) return;
+    await db.updateBusiness(admin.businessId, { photoPaths: b.photoPaths.filter((p) => p !== url) });
+    await deleteImage(url);
+    revalidatePath("/", "layout");
   });
 }

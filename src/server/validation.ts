@@ -48,6 +48,7 @@ export const bookingForm = z.object({
   customerNotes: text(1000),
   payMode: z.enum(["now", "later"]),
   acceptPolicies: z.literal(true, { error: "Necesitas aceptar las políticas para continuar." }),
+  turnstileToken: z.string().max(4096).nullish(),
 });
 
 export type BookingForm = z.input<typeof bookingForm>;

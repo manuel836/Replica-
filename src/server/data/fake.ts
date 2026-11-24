@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type {
   AdminUser,
+  OutboxItem,
   AvailabilityRule,
   BlockedDate,
   Booking,
@@ -13,7 +14,8 @@ import type {
   Review,
   Zone,
 } from "@/lib/types";
-import { addDaysLocal, localToInstant, todayLocal } from "@/server/domain/time";
+import { capacityConflict, loadsForDate } from "@/server/domain/availability";
+import { addDaysLocal, localToInstant, todayLocal, weekdayOf } from "@/server/domain/time";
 import { manageTokenHash } from "@/server/tokens";
 import type { CustomerRow, DataStore } from "./store";
 
@@ -33,6 +35,11 @@ interface Tables {
   payments: Payment[];
   reviews: Review[];
   admins: AdminUser[];
+  loginTokens: { adminId: string; tokenHash: string; expiresAt: Date; usedAt: Date | null }[];
+  rateLimits: Map<string, number>;
+  webhookEvents: { id: string; provider: string; eventId: string; processed: boolean; error: string | null }[];
+  outbox: OutboxItem[];
+  jobRuns: { id: string; name: string; status: string; detail: Record<string, unknown>; error: string | null }[];
 }
 
 const BUSINESS_ID = "00000000-0000-4000-8000-000000000001";
@@ -117,7 +124,7 @@ function seed(): Tables {
   ];
 
   const admins: AdminUser[] = [
-    { id: "00000000-0000-4000-8000-0000000000f1", businessId: BUSINESS_ID, email: "dueno@dgarden.test", role: "owner" },
+    { id: "00000000-0000-4000-8000-0000000000f1", businessId: BUSINESS_ID, email: "dueno@dgarden.test", role: "owner", sessionVersion: 1 },
   ];
 
   const now = new Date();
@@ -223,6 +230,11 @@ function seed(): Tables {
     payments: [],
     reviews: [],
     admins,
+    loginTokens: [],
+    rateLimits: new Map(),
+    webhookEvents: [],
+    outbox: [],
+    jobRuns: [],
   };
 }
 
@@ -453,6 +465,97 @@ export const fakeStore: DataStore = {
   },
   async getAdmin(id) {
     return clone(db().admins.find((a) => a.id === id) ?? null);
+  },
+  async bumpSessionVersion(adminId) {
+    const a = db().admins.find((x) => x.id === adminId);
+    if (a) a.sessionVersion++;
+  },
+  async createLoginToken(adminId, tokenHash, expiresAt) {
+    db().loginTokens.push({ adminId, tokenHash, expiresAt, usedAt: null });
+  },
+  async consumeLoginToken(tokenHash) {
+    const t = db().loginTokens.find((x) => x.tokenHash === tokenHash && !x.usedAt && x.expiresAt > new Date());
+    if (!t) return null;
+    t.usedAt = new Date();
+    return t.adminId;
+  },
+  async hitRateLimit(key, windowSeconds, max) {
+    const m = db().rateLimits;
+    const k = `${key}@${Math.floor(Date.now() / 1000 / windowSeconds)}`;
+    const n = (m.get(k) ?? 0) + 1;
+    m.set(k, n);
+    return n <= max;
+  },
+  async capacityConflict(i) {
+    const t = db();
+    const rule = t.rules.find((r) => r.businessId === i.businessId && r.weekday === weekdayOf(i.date));
+    const blocked = t.blocked.some((b) => b.businessId === i.businessId && b.date === i.date);
+    return capacityConflict({
+      business: t.business,
+      rule,
+      blocked,
+      date: i.date,
+      start: i.start,
+      end: i.end,
+      guests: i.guests,
+      travelBufferMin: i.travelBufferMin,
+      loads: loadsForDate(t.bookings.filter((b) => b.businessId === i.businessId), i.date, new Date(), i.excludeBookingId),
+    });
+  },
+  async recordWebhookEvent(provider, eventId) {
+    const t = db();
+    const ex = t.webhookEvents.find((e) => e.provider === provider && e.eventId === eventId);
+    if (ex) return { id: ex.id, isNew: false, processed: ex.processed };
+    const row = { id: randomUUID(), provider, eventId, processed: false, error: null };
+    t.webhookEvents.push(row);
+    return { id: row.id, isNew: true, processed: false };
+  },
+  async markWebhookProcessed(id, error = null) {
+    const e = db().webhookEvents.find((x) => x.id === id);
+    if (e) Object.assign(e, { processed: !error, error });
+  },
+  async findLatestPendingDeposit(bookingId) {
+    const list = db().payments.filter((p) => p.bookingId === bookingId && p.kind === "deposit" && p.status === "pending" && p.provider !== "manual");
+    return clone(list.at(-1) ?? null);
+  },
+  async enqueueOutbox(item) {
+    const row: OutboxItem = {
+      id: randomUUID(),
+      businessId: item.businessId,
+      kind: "email",
+      payload: item.payload,
+      attempts: 0,
+      nextAttemptAt: new Date(),
+      lastError: null,
+      sentAt: null,
+      deadAt: null,
+      createdAt: new Date(),
+    };
+    db().outbox.push(row);
+    return clone(row);
+  },
+  async listDueOutbox(limit) {
+    const now = new Date();
+    return clone(db().outbox.filter((o) => !o.sentAt && !o.deadAt && o.nextAttemptAt <= now).slice(0, limit));
+  },
+  async updateOutbox(id, patch) {
+    const o = db().outbox.find((x) => x.id === id);
+    if (o) Object.assign(o, patch);
+  },
+  async listDeadOutbox(businessId) {
+    return clone(db().outbox.filter((o) => o.businessId === businessId && o.deadAt));
+  },
+  async purgeExpired() {
+    return 0;
+  },
+  async startJobRun(name) {
+    const id = randomUUID();
+    db().jobRuns.push({ id, name, status: "running", detail: {}, error: null });
+    return id;
+  },
+  async finishJobRun(id, status, detail, error = null) {
+    const j = db().jobRuns.find((x) => x.id === id);
+    if (j) Object.assign(j, { status, detail, error });
   },
 
   async withDayLock(businessId, dates, fn) {

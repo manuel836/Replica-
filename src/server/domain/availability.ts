@@ -1,5 +1,5 @@
 // Reglas de disponibilidad y capacidad. Es la misma lógica que capacity_conflict() en
-// replica/schema.sql: aquí se usa para pintar calendario y horarios (lectura) y en la capa
+// db/migrations/0001_schema.sql: aquí se usa para pintar calendario y horarios (lectura) y en la capa
 // de datos falsa también para escribir. Con Postgres, la escritura la decide la función SQL
 // dentro de la transacción con candado.
 

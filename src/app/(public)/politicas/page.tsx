@@ -103,8 +103,16 @@ export default async function PoliciesPage() {
         <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 text-sm text-text-muted">
           <p>
             {business.name} usa tu nombre, WhatsApp, correo y la dirección del evento solo para atender y dar seguimiento a tu
-            taquiza. No los vendemos ni los compartimos con terceros, salvo el procesador de pagos cuando pagas en línea.
+            taquiza. No los vendemos. Los procesan, por cuenta nuestra, estos servicios:
           </p>
+          <ul className="list-disc pl-5">
+            <li>Mercado Pago: cobra el anticipo cuando pagas en línea (nunca vemos los datos de tu tarjeta).</li>
+            <li>Supabase: guarda la base de datos y las fotos.</li>
+            <li>Vercel: aloja este sitio.</li>
+            <li>Resend: manda los correos de aviso al negocio.</li>
+            <li>Cloudflare Turnstile: revisa que las solicitudes no vengan de robots.</li>
+            <li>WhatsApp: los mensajes que te mandamos salen desde la app de WhatsApp del negocio.</li>
+          </ul>
           <p>Puedes pedirnos ver, corregir o borrar tus datos escribiéndonos por WhatsApp.</p>
           <p className="font-semibold text-warning">
             Texto provisional: debe revisarlo un abogado para cumplir con la ley de protección de datos de México.

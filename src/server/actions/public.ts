@@ -7,6 +7,8 @@ import { store } from "@/server/data";
 import { AppError, run } from "@/server/errors";
 import * as bookings from "@/server/services/bookings";
 import { monthStates, slotsFor } from "@/server/services/availability";
+import { clientIp } from "@/server/auth";
+import { verifyTurnstile } from "@/server/turnstile";
 import { verifyManageToken } from "@/server/tokens";
 import { bookingForm, dateStr, fieldErrors, timeStr } from "@/server/validation";
 
@@ -37,6 +39,13 @@ export async function crearTaquiza(raw: unknown) {
   }
   const f = parsed.data;
   const result = await run(async () => {
+    const ip = await clientIp();
+    if (!(await verifyTurnstile(f.turnstileToken, ip))) {
+      throw new AppError("No pudimos verificar que no eres un robot. Recarga la página e intenta de nuevo.", "turnstile");
+    }
+    if (!(await store().hitRateLimit(`booking-ip:${ip}`, 3600, 20))) {
+      throw new AppError("Recibimos muchas solicitudes desde tu conexión. Escríbenos por WhatsApp.", "rate_limit");
+    }
     const base = await baseUrl();
     return bookings.createBooking(
       {

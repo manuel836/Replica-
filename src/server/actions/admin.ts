@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { TemplateKey } from "@/lib/types";
-import { endSession, loginLink, requireAdmin } from "@/server/auth";
+import { endAllSessions, endSession, requestLoginLink, requireAdmin } from "@/server/auth";
 import { baseUrl } from "@/server/context";
 import { store } from "@/server/data";
 import { AppError, run } from "@/server/errors";
@@ -22,17 +22,21 @@ const refresh = (id?: string) => {
 export async function pedirEnlaceAcceso(email: string) {
   const parsed = z.email().safeParse(email.trim());
   if (!parsed.success) return { ok: false as const, error: "Escribe un correo válido." };
-  const admin = await store().findAdminByEmail(parsed.data);
-  // En producción (Supabase) se manda por correo y la respuesta es la misma exista o no.
-  if (store().kind === "fake") {
-    return { ok: true as const, devLink: admin ? loginLink(await baseUrl(), admin) : null };
-  }
-  return { ok: true as const, devLink: null };
+  const r = await run(async () => requestLoginLink(parsed.data, await baseUrl()));
+  if (!r.ok) return { ok: false as const, error: r.error };
+  return { ok: true as const, devLink: r.data.devLink };
 }
 
 export async function cerrarSesion() {
   await endSession();
   redirect("/admin/entrar");
+}
+
+export async function cerrarSesionEnTodos() {
+  const admin = await requireAdmin().catch(() => null);
+  if (admin) await endAllSessions(admin);
+  else await endSession();
+  redirect("/admin/entrar?aviso=todas");
 }
 
 async function withWhatsApp(id: string, template: TemplateKey | null, reason?: string) {
@@ -109,12 +113,12 @@ export async function guardarNotas(id: string, notes: string) {
 
 export async function registrarPago(id: string, raw: { kind: string; method: string; pesos: string }) {
   return run(async () => {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const kind = z.enum(["deposit", "balance"]).parse(raw.kind);
     const method = z.enum(["cash", "transfer"]).parse(raw.method);
     const pesos = Number(raw.pesos.replace(/[$,\s]/g, ""));
     if (!Number.isFinite(pesos) || pesos <= 0) throw new AppError("Escribe un monto mayor a cero.", "amount", "amount");
-    await bookings.recordManualPayment(id, kind, method, Math.round(pesos * 100));
+    await bookings.recordManualPayment(id, kind, method, Math.round(pesos * 100), admin.id);
     refresh(id);
   });
 }

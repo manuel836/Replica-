@@ -7,7 +7,7 @@ import { Alert } from "@/components/ui/Feedback";
 import { TextField } from "@/components/ui/Field";
 import { pedirEnlaceAcceso } from "@/server/actions/admin";
 
-export function LoginForm({ linkError }: { linkError: boolean }) {
+export function LoginForm({ linkError, signedOutEverywhere = false }: { linkError: boolean; signedOutEverywhere?: boolean }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
     return (
       <div className="flex flex-col gap-4">
         <Alert tone="success" title="Revisa tu correo">
-          Si {email} tiene acceso, te llegará un enlace para entrar. Vence en 15 minutos.
+          Si {email} tiene acceso, te llegará un enlace para entrar. Funciona una vez y vence en 15 minutos.
         </Alert>
         {sent.devLink && (
           <Alert tone="warning" title="Modo de desarrollo" action={<ButtonLink href={sent.devLink}>Entrar con el enlace</ButtonLink>}>
@@ -44,7 +44,8 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
         setSent({ devLink: r.devLink });
       }}
     >
-      {linkError && <Alert tone="danger" title="Ese enlace ya no sirve">Pide uno nuevo; duran 15 minutos.</Alert>}
+      {linkError && <Alert tone="danger" title="Ese enlace ya no sirve">Ya se usó o venció. Pide uno nuevo; duran 15 minutos.</Alert>}
+      {signedOutEverywhere && <Alert tone="success" title="Cerraste sesión en todos tus dispositivos" />}
       <TextField
         label="Correo"
         type="email"

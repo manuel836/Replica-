@@ -28,6 +28,7 @@ export default async function AdminPackagesPage() {
           includes: p.includes.join("\n"),
           isActive: p.isActive,
           pricePerGuestCents: p.pricePerGuestCents,
+          photoUrl: p.photoPath,
         }))}
       />
     </div>
