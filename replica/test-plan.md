@@ -1,6 +1,6 @@
 # Plan de pruebas: taquizas de D' Garden Tacos
 
-Build: `da63f7c` y siguientes. Fecha: 2026-11-24.
+Build: `da63f7c` y siguientes; la última corrida, en `c9d37a9`. Fecha: 2026-11-24.
 Entorno: local; la app en `next dev` y una imitación de Mercado Pago y Resend (`e2e/mocks/providers.mjs`).
 
 | corrida | datos | resultado |
@@ -8,6 +8,8 @@ Entorno: local; la app en `next dev` y una imitación de Mercado Pago y Resend (
 | Primera | memoria | 44 pasaron, 9 fallaron, 2 se saltaron. Las 9 fallas: 7 bugs reales (`bugs.md`) y 2 pruebas mal escritas |
 | Final | memoria | **53 pasaron, 0 fallaron**, 2 se saltaron (solo Postgres) |
 | Final | Postgres 16 | **55 pasaron, 0 fallaron** |
+| Después de `/replica-build` (16 casos nuevos) | memoria | **69 pasaron, 0 fallaron**, 2 se saltaron (solo Postgres) |
+| Después de `/replica-build` (16 casos nuevos) | Postgres 16 | **71 pasaron, 0 fallaron** |
 
 Cómo correrlas:
 
@@ -54,7 +56,7 @@ selectores van por rol y etiqueta, nunca por clases.
 | F04-H2 | | feliz | El cliente rechaza la propuesta | Rechazada | e2e | ✅ |
 | F04-H3 | | feliz | Rechazar con motivo | El cliente ve el aviso con el motivo | e2e | ✅ |
 | F04-E1 | | propuesta vencida | Esperar 48 h | "La propuesta ya venció" | manual | regla probada en el job; no automatizado (reloj) |
-| F05-H1 | Cambiar o cancelar | feliz | Cambiar fecha y +5 invitados | Nueva fecha, 45 invitados, en el historial | e2e | ✅ |
+| F05-H1 | Cambiar o cancelar | feliz | Cambiar fecha y +5 invitados | Nueva fecha, 45 invitados, en el historial; correo "Guardamos el cambio" | e2e | ✅ |
 | F05-H2 | | cancelar en plazo | Pagar y cancelar | Reembolso en Mercado Pago con llave de idempotencia | e2e | ✅ |
 | F05-E1 | | cancelar fuera de plazo | Plazo de 365 días, pagar y cancelar | Lo advierte; sin reembolso | e2e | ✅ |
 | F05-N1 | | registro inexistente o enlace viejo | "Nuevo enlace"; abrir el viejo y uno inventado | "Este enlace no funciona" (h1, axe) | e2e | ✅ |
@@ -82,6 +84,28 @@ selectores van por rol y etiqueta, nunca por clases.
 | SEC-1 | Base de datos | RLS | Rol `anon` con permiso de select | 0 filas | e2e (Postgres) | ✅ |
 | SEC-2 | | datos de otro negocio | Cookie válida de otro negocio | No entra al panel ni a los enlaces de WhatsApp | e2e (Postgres) | ✅ |
 
+## Agregados después de `/replica-diff`
+
+| caso | flujo | tipo | pasos | esperado | auto | resultado |
+| --- | --- | --- | --- | --- | --- | --- |
+| S11-H1 | Agenda semana y mes | feliz | Agendar; el dueño abre "Mes", busca la taquiza, va a su semana y a su detalle | Sale en el mes y en la semana con nombre, hora y lugares ocupados; axe sin violaciones | e2e | ✅ |
+| S11-H2 | | feliz | Bloquear un día con motivo | La semana dice "Bloqueado: motivo"; el mes lo marca | e2e | ✅ |
+| S11-H3 | | feliz | Flechas y "Esta semana" / "Este mes" | Cambian de periodo y regresan a hoy | e2e | ✅ |
+| S11-E1 | | celular 390 px | Semana y mes en celular | 7 días en columna, conteos en el mes, 0 px de desborde, axe | e2e | ✅ |
+| S11-E2 | | dirección inválida | `fecha=2026-02-31` y `fecha=hola` | Regresa a hoy sin error | e2e | ✅ |
+| CE-H1 | Correos al cliente | feliz | Agendar con correo; el dueño acepta; el cliente cancela desde el enlace del correo | Correos de solicitud, confirmación y cancelación; responder llega al negocio; queda en el historial | e2e | ✅ |
+| CE-H2 | | sin correo | Agendar sin correo | Al cliente no se le manda nada; solo el aviso al dueño | e2e | ✅ |
+| CE-H3 | | recordatorio | Proponer mañana, aceptar y correr el job dos veces | Correo de propuesta, de confirmación y **un solo** recordatorio | e2e | ✅ |
+| S12-N0 | Reembolsos | BUG-008 | Pagar, cancelar en plazo, abrir el detalle | "Pagado: $0" (antes: -$1,800) | e2e | ✅ (tras BUG-008) |
+| S12-H1 | | feliz | Reembolsar $500 de $1,800; luego cancelar | Reembolso de $500 en Mercado Pago, "Pagado: $1,300"; al cancelar se devuelven $1,300, no $1,800 | e2e | ✅ |
+| S12-H1 | | negativo | $2,000 y $0 | "Puedes reembolsar hasta $1,800." / "Escribe un monto mayor a cero."; no se reembolsa nada | e2e | ✅ |
+| S12-N1 | | permiso | El ayudante abre una taquiza pagada | No ve el botón de reembolso | e2e | ✅ |
+| EQ-H1 | Equipo | feliz | Dar acceso a un correo; esa persona entra; quitarle el acceso | Le llega la invitación, entra con su enlace, no ve Equipo; al quitarlo su sesión ya no sirve | e2e | ✅ |
+| EQ-N1 | | negativo | Correo inválido o que ya tiene acceso | Mensaje en el campo; no se agrega | e2e | ✅ |
+| RP-H1 | Reportes | feliz | Taquiza pagada con nombre `=SUMA(1;1)`; luego $1,000 en efectivo | El CSV cuadra (total, anticipo, pagado, por cobrar) y no ejecuta fórmulas; "Cobrado" y "Por cobrar" se mueven $1,000 | e2e | ✅ |
+| RP-E1 | | vacío y celular | Un mes sin taquizas; el reporte a 390 px; mes inválido en el CSV | "Sin taquizas este mes"; 0 px de desborde; axe; 400 | e2e | ✅ |
+| RP-N1 | | permiso | Ayudante y alguien sin sesión | 403 y 401 en el CSV; el ayudante no entra al reporte | e2e | ✅ |
+
 ## Lista manual (no se puede automatizar aquí)
 
 Para hacerla cuando el dueño tenga sus cuentas (ver `replica/backend.md`). Anota fecha, teléfono
@@ -89,7 +113,9 @@ y resultado.
 
 - [ ] **Pago real de prueba en Mercado Pago:** con credenciales `TEST-` y una tarjeta de prueba
   aprobada y otra rechazada. El webhook debe llegar a la URL pública (vista previa de Vercel).
-- [ ] **Correo real:** el enlace de entrada y el aviso de solicitud llegan a la bandeja de entrada, no a spam.
+- [ ] **Correo real:** el enlace de entrada, el aviso de solicitud y los correos al cliente (confirmación y
+  recordatorio) llegan a la bandeja de entrada, no a spam. Responder a uno de cliente llega a tu correo.
+- [ ] **CSV en Excel y Google Sheets:** los acentos y los montos se ven bien.
 - [ ] **WhatsApp en el teléfono:** los botones abren la app con el mensaje y el número correctos (Android y iPhone).
 - [ ] **Celular real de gama baja con red lenta (3G):**
   - Agendar completo.

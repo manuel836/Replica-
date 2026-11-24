@@ -1,7 +1,10 @@
 # Build log: taquizas de D' Garden Tacos
 
-Paridad con OpenTable (`parity.py`): **89.7 / 100**, con 25 de 29 must-haves.
-Las 19 pantallas están construidas.
+Paridad con OpenTable (`parity.py`): **98.2 / 100**, con **29 de 29** must-haves (al cierre de
+la segunda vuelta de `/replica-build`, después de `/replica-diff`). Las 19 pantallas de la recon
+están construidas, más 2 nuevas: Equipo (S20) y Reportes (S21).
+
+Primera vuelta: 89.7 / 100, con 25 de 29 must-haves.
 
 **Actualización tras `/replica-backend`:** paridad **93.8 / 100**, con 28 de 29 must-haves.
 Ahora hay Postgres real, Mercado Pago, correo por Resend, entrada por enlace de un solo uso y
