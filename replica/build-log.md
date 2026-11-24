@@ -27,7 +27,7 @@ consola y el desborde horizontal. Resultado final: 0 errores de consola, 0 viola
 | S08 | 2026-11-24 | done | — | El calendario contaba la propia taquiza como ocupada; ahora se excluye (también en el conteo del mes) |
 | S09 | 2026-11-24 | done | El aviso de privacidad es provisional: lo debe revisar un abogado | — |
 | S10 | 2026-11-24 | partial | En desarrollo el enlace mágico se muestra en pantalla; el envío por correo llega con Supabase Auth | — |
-| S11 | 2026-11-24 | partial | Falta la vista de calendario semana/mes (hoy es una lista agrupada por día). Las reseñas marcadas "No publicar" vuelven a aparecer en la cola: falta guardar "revisada" | Las taquizas canceladas con fecha futura no salían en ninguna pestaña: se agregó "Canceladas" |
+| S11 | 2026-11-24 | done | — (semana y mes agregados después de `/replica-diff`; la reseña "No publicar" se corrigió en BUG-006) | Las taquizas canceladas con fecha futura no salían en ninguna pestaña: se agregó "Canceladas". En la cuadrícula del mes, en celular, cada día es un solo enlace a su semana (los nombres no caben a 390 px) |
 | S12 | 2026-11-24 | done | Falta botón de reembolso parcial (hoy se reembolsa completo al rechazar o cancelar) | "Aceptar de todos modos" dependía del texto del error; ahora depende del código del conflicto, y cubre días que el dueño cerró después |
 | S13 | 2026-11-24 | done | — | — |
 | S14 | 2026-11-24 | done | La duración, el traslado y la capacidad se guardan iguales para los 7 días (el esquema permite distinguirlos por día) | — |

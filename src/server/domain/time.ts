@@ -63,3 +63,37 @@ export function formatStamp(instant: Date, zone: string): string {
 export function formatMonth(month: string): string {
   return format(new Date(`${month}-15T12:00:00Z`), "MMMM 'de' yyyy", { locale: es });
 }
+
+/** Lunes de la semana de una fecha local (en México la semana empieza en lunes). */
+export function startOfWeekLocal(date: string): string {
+  return addDaysLocal(date, -((weekdayOf(date) + 6) % 7));
+}
+
+/** Primer día del mes de una fecha local. */
+export function startOfMonthLocal(date: string): string {
+  return `${date.slice(0, 7)}-01`;
+}
+
+/** Primer día del mes que queda n meses después (o antes, con n negativo). */
+export function addMonthsLocal(date: string, n: number): string {
+  const [y, m] = date.split("-").map(Number);
+  const first = new Date(Date.UTC(y, m - 1 + n, 1, 12));
+  return format(first, "yyyy-MM-dd");
+}
+
+/** "23 – 29 de noviembre de 2026", o "30 de noviembre – 6 de diciembre de 2026". */
+export function formatWeekRange(from: string, to: string): string {
+  const a = new Date(`${from}T12:00:00Z`);
+  const b = new Date(`${to}T12:00:00Z`);
+  if (from.slice(0, 7) === to.slice(0, 7)) return `${format(a, "d")} – ${format(b, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
+  if (from.slice(0, 4) === to.slice(0, 4))
+    return `${format(a, "d 'de' MMMM", { locale: es })} – ${format(b, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
+  return `${format(a, "d 'de' MMMM 'de' yyyy", { locale: es })} – ${format(b, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
+}
+
+/** Fecha local válida "yyyy-MM-dd" o null. */
+export function parseLocalDate(s: string | undefined | null): string | null {
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const d = new Date(`${s}T12:00:00Z`);
+  return Number.isNaN(d.getTime()) || format(d, "yyyy-MM-dd") !== s ? null : s;
+}

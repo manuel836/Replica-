@@ -3,7 +3,14 @@ import type { Booking, Business, Customer, Package, TemplateKey, Zone } from "@/
 import { whatsappLink } from "@/lib/format";
 import { store } from "@/server/data";
 import { renderTemplate } from "@/server/domain/messages";
-import { addDaysLocal, todayLocal } from "@/server/domain/time";
+import {
+  addDaysLocal,
+  addMonthsLocal,
+  startOfMonthLocal,
+  startOfWeekLocal,
+  todayLocal,
+  weekdayOf,
+} from "@/server/domain/time";
 import { AppError } from "@/server/errors";
 import { verifyManageToken } from "@/server/tokens";
 import { manageUrl } from "@/server/context";
@@ -67,6 +74,73 @@ export async function agenda(tab: AgendaTab) {
     counts: { pendientes: counts[0].length, proximas: counts[1].length },
     tomorrow: await joinRows(business, tomorrow),
     unpublishedReviews: (await db.listReviews(business.id)).filter((r) => !r.reviewedAt),
+  };
+}
+
+export type CalendarView = "semana" | "mes";
+
+/** Estados que ocupan el día: se ven en el calendario. Las canceladas, rechazadas y vencidas no. */
+const ON_CALENDAR: Booking["status"][] = ["requested", "awaiting_payment", "proposed", "confirmed", "completed", "no_show"];
+
+export interface CalendarDay {
+  date: string;
+  /** false para los días del mes anterior o siguiente que completan la cuadrícula. */
+  inRange: boolean;
+  isToday: boolean;
+  isPast: boolean;
+  /** Cerrado por el horario semanal. */
+  closed: boolean;
+  /** Motivo si el dueño bloqueó el día ("" si no puso motivo); null si no está bloqueado. */
+  blocked: string | null;
+  maxBookings: number;
+  rows: BookingRow[];
+}
+
+/** Días de la semana (lunes a domingo) o del mes (semanas completas) con sus taquizas. */
+export async function agendaCalendar(view: CalendarView, anchor: string) {
+  const db = store();
+  const business = await db.getBusiness();
+  const today = todayLocal(business.timezone);
+  const first = view === "semana" ? startOfWeekLocal(anchor) : startOfMonthLocal(anchor);
+  const last = view === "semana" ? addDaysLocal(first, 6) : addDaysLocal(addMonthsLocal(first, 1), -1);
+  const gridFrom = startOfWeekLocal(first);
+  const gridTo = addDaysLocal(startOfWeekLocal(last), 6);
+
+  const [bookings, rules, blocked] = await Promise.all([
+    db.listBookings(business.id, { statuses: ON_CALENDAR, from: gridFrom, to: gridTo }),
+    db.listRules(business.id),
+    db.listBlockedDates(business.id),
+  ]);
+  const rows = await joinRows(
+    business,
+    [...bookings].sort((a, b) => a.startAt.getTime() - b.startAt.getTime()),
+  );
+  const blockedMap = new Map(blocked.map((b) => [b.date, b.reason]));
+
+  const days: CalendarDay[] = [];
+  for (let d = gridFrom; d <= gridTo; d = addDaysLocal(d, 1)) {
+    const rule = rules.find((r) => r.weekday === weekdayOf(d));
+    days.push({
+      date: d,
+      inRange: d >= first && d <= last,
+      isToday: d === today,
+      isPast: d < today,
+      closed: !rule || !rule.isOpen,
+      blocked: blockedMap.has(d) ? blockedMap.get(d)! : null,
+      maxBookings: rule?.maxBookingsPerDay ?? 0,
+      rows: rows.filter((r) => r.booking.eventDate === d),
+    });
+  }
+  return {
+    business,
+    today,
+    first,
+    last,
+    days,
+    total: rows.filter((r) => r.booking.eventDate >= first && r.booking.eventDate <= last).length,
+    prev: view === "semana" ? addDaysLocal(first, -7) : addMonthsLocal(first, -1),
+    next: view === "semana" ? addDaysLocal(first, 7) : addMonthsLocal(first, 1),
+    current: view === "semana" ? startOfWeekLocal(today) : startOfMonthLocal(today),
   };
 }
 

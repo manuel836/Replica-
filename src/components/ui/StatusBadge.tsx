@@ -57,3 +57,14 @@ export function StatusBadge({ status, className }: { status: BookingStatus; clas
     </span>
   );
 }
+
+/** Versión corta para el calendario: ícono con color; el texto va para lectores de pantalla y al pasar el mouse. */
+export function StatusMark({ status, className }: { status: BookingStatus; className?: string }) {
+  const { label, tone, icon: Icon } = STATUS[status];
+  return (
+    <span title={label} className={cn("inline-flex size-5 shrink-0 items-center justify-center rounded-pill", TONES[tone], className)}>
+      <Icon aria-hidden className="size-3" />
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}

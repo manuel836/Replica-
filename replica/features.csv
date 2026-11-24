@@ -27,7 +27,7 @@ Mostrar reseñas en la página pública,reseñas,could,yes,yes,"S01 · Build: S0
 Diseño responsivo (celular primero),general,must,yes,yes,Build: Probado a 390 y 1440 px sin desborde horizontal
 Sitio en español (es-MX) con precios en MXN,general,must,yes,yes,
 Inicio de sesión del dueño,admin,must,yes,yes,"S10 · Backend: enlace mágico de un solo uso por correo (Resend), sesiones revocables"
-Agenda por día / semana / mes con todas las taquizas,admin agenda,must,yes,partial,Equivale al libro de reservaciones de OpenTable (S11) · Build: S11 lista agrupada por día con pestañas; falta la vista de calendario semana/mes
+Agenda por día / semana / mes con todas las taquizas,admin agenda,must,yes,yes,Equivale al libro de reservaciones de OpenTable (S11) · Build: S11 con vistas Lista (por día y estado) / Semana / Mes; días cerrados y bloqueados; lugares ocupados por día
 Filtrar por estado (pendientes / confirmadas / canceladas / completadas),admin agenda,must,yes,yes,S11 · Build: Pestañas Por responder / Próximas / Pasadas / Canceladas
 Ver el detalle de una taquiza,admin agenda,must,yes,yes,S12 · Build: S12
 Aceptar o rechazar una solicitud,admin agenda,must,yes,yes,Equivale a las solicitudes de eventos privados de OpenTable (S12) · Build: S12; el dueño puede forzar un conflicto de agenda

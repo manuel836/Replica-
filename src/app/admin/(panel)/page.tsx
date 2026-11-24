@@ -1,10 +1,11 @@
-import { BellRing, CalendarX, MessageCircle } from "lucide-react";
+import { BellRing, CalendarDays, CalendarRange, CalendarX, List, MessageCircle, type LucideIcon } from "lucide-react";
 import { BookingCard } from "@/components/ui/BookingCard";
 import { ButtonLink } from "@/components/ui/Button";
 import { Alert, EmptyState } from "@/components/ui/Feedback";
 import { cn } from "@/lib/cn";
-import { formatDateLong, formatDateShort, localTime } from "@/server/domain/time";
-import { agenda, type AgendaTab, type BookingRow } from "@/server/services/views";
+import { formatDateLong, formatDateShort, localTime, parseLocalDate } from "@/server/domain/time";
+import { agenda, agendaCalendar, type AgendaTab, type BookingRow, type CalendarView } from "@/server/services/views";
+import { AgendaCalendar } from "./AgendaCalendar";
 import { ReviewQueue } from "./ReviewQueue";
 
 export const metadata = { title: "Agenda" };
@@ -23,11 +24,26 @@ const EMPTY: Record<AgendaTab, { title: string; text: string }> = {
   canceladas: { title: "Nada cancelado", text: "Aquí verás las taquizas rechazadas, canceladas o vencidas." },
 };
 
-export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ tab?: string; aviso?: string }> }) {
-  const { tab: rawTab, aviso } = await searchParams;
+type View = "lista" | CalendarView;
+
+const VIEWS: { id: View; label: string; icon: LucideIcon }[] = [
+  { id: "lista", label: "Lista", icon: List },
+  { id: "semana", label: "Semana", icon: CalendarRange },
+  { id: "mes", label: "Mes", icon: CalendarDays },
+];
+
+export default async function AgendaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; aviso?: string; vista?: string; fecha?: string }>;
+}) {
+  const { tab: rawTab, aviso, vista, fecha } = await searchParams;
+  const view: View = VIEWS.some((v) => v.id === vista) ? (vista as View) : "lista";
   const tab: AgendaTab = TABS.some((t) => t.id === rawTab) ? (rawTab as AgendaTab) : "pendientes";
   const { business, today, rows, counts, tomorrow, unpublishedReviews } = await agenda(tab);
   const tz = business.timezone;
+  const anchor = parseLocalDate(fecha) ?? today;
+  const calendar = view === "lista" ? null : await agendaCalendar(view, anchor);
 
   const groups = new Map<string, BookingRow[]>();
   for (const r of rows) {
@@ -37,7 +53,28 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="mx-auto flex max-w-content flex-col gap-6">
-      <h1 className="text-xl text-text">Agenda</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl text-text">Agenda</h1>
+        <nav aria-label="Vista de la agenda" className="flex rounded-md border border-border bg-surface p-1">
+          {VIEWS.map(({ id, label, icon: Icon }) => {
+            const active = id === view;
+            return (
+              <a
+                key={id}
+                href={id === "lista" ? "/admin" : `/admin?vista=${id}${fecha && parseLocalDate(fecha) ? `&fecha=${anchor}` : ""}`}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex h-9 items-center gap-1.5 rounded-sm px-3 text-sm font-semibold",
+                  active ? "bg-accent text-on-accent" : "text-text-muted hover:bg-surface-muted hover:text-text",
+                )}
+              >
+                <Icon aria-hidden className="size-4" />
+                {label}
+              </a>
+            );
+          })}
+        </nav>
+      </div>
       {aviso === "sin-permiso" && <Alert tone="warning" title="Esa sección es solo para el dueño" />}
       {!business.whatsappE164 && (
         <Alert tone="info" title="Falta el WhatsApp del negocio" action={<ButtonLink size="sm" variant="secondary" href="/admin/ajustes">Ir a Ajustes</ButtonLink>}>
@@ -71,68 +108,84 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
 
       {unpublishedReviews.length > 0 && <ReviewQueue reviews={unpublishedReviews.map((r) => ({ id: r.id, rating: r.rating, comment: r.comment }))} />}
 
-      <nav aria-label="Filtrar taquizas" className="flex gap-1 overflow-x-auto border-b border-border">
-        {TABS.map((t) => {
-          const active = t.id === tab;
-          const count = t.id === "pendientes" || t.id === "proximas" ? counts[t.id] : null;
-          return (
-            <a
-              key={t.id}
-              href={`/admin?tab=${t.id}`}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "-mb-px flex h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-semibold",
-                active ? "border-accent-text text-text" : "border-transparent text-text-muted hover:text-text",
-              )}
-            >
-              {t.label}
-              {count !== null && count > 0 && (
-                <span className={cn("rounded-pill px-2 py-0.5 text-xs", active ? "bg-accent text-on-accent" : "bg-surface-muted text-text-muted")}>
-                  {count}
-                </span>
-              )}
-            </a>
-          );
-        })}
-      </nav>
-
-      {rows.length === 0 ? (
-        <EmptyState as="h2" icon={CalendarX} title={EMPTY[tab].title} action={<ButtonLink size="sm" href="/admin/t/nueva">Registrar una taquiza</ButtonLink>}>
-          {EMPTY[tab].text}
-        </EmptyState>
+      {calendar ? (
+        <AgendaCalendar
+          view={view as CalendarView}
+          timezone={tz}
+          first={calendar.first}
+          last={calendar.last}
+          prev={calendar.prev}
+          next={calendar.next}
+          current={calendar.current}
+          total={calendar.total}
+          days={calendar.days}
+        />
       ) : (
-        <div className="flex flex-col gap-6">
-          {[...groups.entries()].map(([key, items]) => (
-            <section key={key} aria-label={key === "all" ? "Por responder" : formatDateLong(key)} className="flex flex-col gap-3">
-              {key !== "all" && (
-                <h2 className="text-sm font-semibold text-text-muted uppercase first-letter:uppercase">
-                  {key === today ? "Hoy · " : ""}
-                  {formatDateLong(key)}
-                </h2>
-              )}
-              <div className="grid gap-3 lg:grid-cols-2">
-                {items.map(({ booking, customer, pkg }) => (
-                  <BookingCard
-                    key={booking.id}
-                    href={`/admin/t/${booking.id}`}
-                    booking={{
-                      id: booking.id,
-                      code: booking.code,
-                      customerName: customer?.name ?? "Cliente",
-                      when: `${formatDateShort(booking.eventDate)} · ${localTime(booking.startAt, tz)}`,
-                      guests: booking.guests,
-                      packageName: pkg?.name ?? "",
-                      neighborhood: booking.neighborhood,
-                      status: booking.status,
-                      needsAttention: booking.needsAttention,
-                      past: booking.eventDate < today,
-                    }}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+        <>
+          <nav aria-label="Filtrar taquizas" className="flex gap-1 overflow-x-auto border-b border-border">
+            {TABS.map((t) => {
+              const active = t.id === tab;
+              const count = t.id === "pendientes" || t.id === "proximas" ? counts[t.id] : null;
+              return (
+                <a
+                  key={t.id}
+                  href={`/admin?tab=${t.id}`}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "-mb-px flex h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-semibold",
+                    active ? "border-accent-text text-text" : "border-transparent text-text-muted hover:text-text",
+                  )}
+                >
+                  {t.label}
+                  {count !== null && count > 0 && (
+                    <span className={cn("rounded-pill px-2 py-0.5 text-xs", active ? "bg-accent text-on-accent" : "bg-surface-muted text-text-muted")}>
+                      {count}
+                    </span>
+                  )}
+                </a>
+              );
+            })}
+          </nav>
+
+          {rows.length === 0 ? (
+            <EmptyState as="h2" icon={CalendarX} title={EMPTY[tab].title} action={<ButtonLink size="sm" href="/admin/t/nueva">Registrar una taquiza</ButtonLink>}>
+              {EMPTY[tab].text}
+            </EmptyState>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {[...groups.entries()].map(([key, items]) => (
+                <section key={key} aria-label={key === "all" ? "Por responder" : formatDateLong(key)} className="flex flex-col gap-3">
+                  {key !== "all" && (
+                    <h2 className="text-sm font-semibold text-text-muted uppercase first-letter:uppercase">
+                      {key === today ? "Hoy · " : ""}
+                      {formatDateLong(key)}
+                    </h2>
+                  )}
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    {items.map(({ booking, customer, pkg }) => (
+                      <BookingCard
+                        key={booking.id}
+                        href={`/admin/t/${booking.id}`}
+                        booking={{
+                          id: booking.id,
+                          code: booking.code,
+                          customerName: customer?.name ?? "Cliente",
+                          when: `${formatDateShort(booking.eventDate)} · ${localTime(booking.startAt, tz)}`,
+                          guests: booking.guests,
+                          packageName: pkg?.name ?? "",
+                          neighborhood: booking.neighborhood,
+                          status: booking.status,
+                          needsAttention: booking.needsAttention,
+                          past: booking.eventDate < today,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
