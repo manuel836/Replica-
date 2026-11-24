@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
@@ -41,6 +42,8 @@ const STEPS = ["Fecha y hora", "Datos del evento", "Pago"];
 const EVENT_TYPES = ["Cumpleaños", "Boda", "XV años", "Bautizo o comunión", "Evento de empresa", "Reunión familiar", "Otro"];
 
 const monthKey = (d: Date) => format(d, "yyyy-MM");
+/** Borrador del formulario en esta pestaña: sobrevive a recargar y se borra al enviar. */
+const DRAFT_KEY = "dg-agendar-borrador";
 const toDate = (ymd: string) => new Date(`${ymd}T12:00:00`);
 
 function deposit(b: Props["business"], total: number) {
@@ -50,7 +53,10 @@ function deposit(b: Props["business"], total: number) {
 }
 
 export function BookingFlow({ business, packages, zones, initialGuests, firstMonth, lastMonth }: Props) {
-  const [step, setStep] = useState(0);
+  const searchParams = useSearchParams();
+  const urlStep = Math.min(2, Math.max(0, (Number(searchParams.get("paso")) || 1) - 1));
+  const [detailsOk, setDetailsOk] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
   const [guests, setGuests] = useState(initialGuests);
   const [month, setMonth] = useState(toDate(`${firstMonth}-01`));
   const [days, setDays] = useState<Record<string, DayState>>({});
@@ -81,18 +87,54 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
   if (!idempotencyKey.current && typeof crypto !== "undefined") idempotencyKey.current = crypto.randomUUID();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // ---- Pasos con el botón Atrás del navegador ----
-  const goTo = useCallback((next: number, push = true) => {
-    setStep(next);
-    if (push) history.pushState({ paso: next }, "");
+  // ---- Paso actual: va en la URL (?paso=2), así Atrás y Adelante del navegador funcionan ----
+  // No se puede estar en un paso sin haber completado los anteriores.
+  const step = !date || !time ? 0 : urlStep === 2 && !detailsOk ? 1 : urlStep;
+  const goTo = useCallback((next: number) => {
+    const p = new URLSearchParams(window.location.search);
+    p.set("paso", String(next + 1));
+    window.history.pushState(null, "", `?${p}`);
     requestAnimationFrame(() => headingRef.current?.focus());
   }, []);
+
+  // ---- Borrador: se recupera al recargar a mitad del flujo ----
   useEffect(() => {
-    history.replaceState({ paso: 0 }, "");
-    const onPop = (e: PopStateEvent) => setStep(typeof e.state?.paso === "number" ? e.state.paso : 0);
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      const midFlow = new URLSearchParams(window.location.search).has("paso");
+      if (raw && midFlow) {
+        const d = JSON.parse(raw);
+        if (d?.v === 1) {
+          setGuests(d.guests);
+          if (d.month) setMonth(toDate(`${d.month}-01`));
+          setDate(d.date ?? null);
+          setTime(d.time ?? undefined);
+          if (d.packageId) setPackageId(d.packageId);
+          setForm((f) => ({ ...f, ...d.form }));
+          if (d.payMode) setPayMode(d.payMode);
+          setDetailsOk(Boolean(d.detailsOk));
+          if (d.key) idempotencyKey.current = d.key;
+        }
+      } else if (!midFlow) {
+        sessionStorage.removeItem(DRAFT_KEY);
+      }
+    } catch {
+      /* sin sessionStorage (modo privado estricto): el flujo funciona igual, sin borrador */
+    }
+    setDraftReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    try {
+      sessionStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ v: 1, guests, month: monthKey(month), date, time, packageId, form, payMode, detailsOk, key: idempotencyKey.current }),
+      );
+    } catch {
+      /* ignorar */
+    }
+  }, [draftReady, guests, month, date, time, packageId, form, payMode, detailsOk]);
 
   // ---- Disponibilidad del mes (se recalcula si cambian los invitados) ----
   const loadMonth = useCallback(async (m: Date, g: number, signal?: AbortSignal) => {
@@ -190,6 +232,11 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
       turnstileToken,
     });
     if (res.ok) {
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* ignorar */
+      }
       window.location.assign(res.redirectTo);
       return;
     }
@@ -318,7 +365,10 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
             className="flex flex-col gap-6"
             onSubmit={(e) => {
               e.preventDefault();
-              if (validateDetails()) goTo(2);
+              if (validateDetails()) {
+                setDetailsOk(true);
+                goTo(2);
+              }
             }}
           >
             <fieldset className="flex flex-col gap-3">
