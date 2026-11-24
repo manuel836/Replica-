@@ -145,7 +145,7 @@ Expected: "Pagado: $0".
 Actual: "Pagado: -$1,800 · Por cobrar: $7,800". El dinero real está bien; el error es solo de la suma en pantalla.
 Evidence: `replica/bugs/BUG-008.png`; prueba `S12-N0`.
 Suspected cause: el reembolso se restaba dos veces: el anticipo reembolsado ya no contaba como pagado y además se restaba el reembolso.
-Status: fixed in the commit "build: S12 partial refund" (la prueba falló antes y pasa después). La suma vive ahora en `src/server/domain/money.ts`.
+Status: fixed in 974332c (la prueba falló antes y pasa después). La suma vive ahora en `src/server/domain/money.ts`.
 
 ---
 
