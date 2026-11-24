@@ -2,9 +2,6 @@ import type { TemplateKey } from "@/lib/types";
 import { requireAdminPage } from "@/server/auth";
 import { store } from "@/server/data";
 import { DEFAULT_TEMPLATES, TEMPLATE_LABELS } from "@/server/domain/messages";
-import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { cerrarSesionEnTodos } from "@/server/actions/admin";
 import { Alert } from "@/components/ui/Feedback";
 import { emailConfigured } from "@/server/email";
 import { BusinessPhotos } from "./BusinessPhotos";
@@ -66,18 +63,13 @@ export default async function SettingsPage() {
         templateLabels={TEMPLATE_LABELS}
         defaults={DEFAULT_TEMPLATES}
       />
-      <section aria-labelledby="seguridad" className="flex flex-col gap-3 border-t border-border pt-6">
-        <h2 id="seguridad" className="text-lg text-text">
-          Seguridad
-        </h2>
-        <p className="text-sm text-text-muted">Si perdiste tu celular o entraste en una computadora ajena, cierra todas tus sesiones.</p>
-        <form action={cerrarSesionEnTodos}>
-          <Button type="submit" variant="secondary">
-            <LogOut aria-hidden className="size-4" />
-            Cerrar sesión en todos lados
-          </Button>
-        </form>
-      </section>
+      <p className="border-t border-border pt-6 text-sm text-text-muted">
+        Para cerrar tus sesiones en todos tus dispositivos, ve a{" "}
+        <a href="/admin/cuenta" className="font-semibold text-accent-text underline underline-offset-4">
+          Mi cuenta
+        </a>
+        .
+      </p>
     </div>
   );
 }
