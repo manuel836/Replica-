@@ -9,6 +9,7 @@ import { DEFAULT_TEMPLATES } from "@/server/domain/messages";
 import { AppError, run } from "@/server/errors";
 import { dateStr, fieldErrors, toMexicanE164 } from "@/server/validation";
 import { deleteImage, uploadImage } from "@/server/storage";
+import * as team from "@/server/services/team";
 
 // Configuración del negocio (S14 a S18). Solo el dueño, salvo las notas de clientes.
 
@@ -385,5 +386,24 @@ export async function quitarFotoNegocio(url: string) {
     await db.updateBusiness(admin.businessId, { photoPaths: b.photoPaths.filter((p) => p !== url) });
     await deleteImage(url);
     revalidatePath("/", "layout");
+  });
+}
+
+// ---------------- Equipo ----------------
+
+export async function agregarAyudante(email: string) {
+  return run(async () => {
+    const admin = await requireAdmin("owner");
+    const added = await team.addHelper(admin, String(email ?? ""));
+    revalidatePath("/admin/equipo");
+    return { email: added.email };
+  });
+}
+
+export async function quitarAyudante(id: string) {
+  return run(async () => {
+    const admin = await requireAdmin("owner");
+    await team.removeHelper(admin, String(id ?? ""));
+    revalidatePath("/admin/equipo");
   });
 }

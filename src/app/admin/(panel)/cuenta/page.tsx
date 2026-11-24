@@ -23,6 +23,15 @@ export default async function AccountPage() {
           <dd className="text-text">{ROLE[admin.role]}</dd>
         </div>
       </dl>
+      {admin.role === "owner" && (
+        <p className="text-sm text-text-muted">
+          ¿Alguien más te ayuda con la agenda? Dale su propio acceso en{" "}
+          <a href="/admin/equipo" className="font-semibold text-accent-text underline underline-offset-4">
+            Equipo
+          </a>
+          .
+        </p>
+      )}
       <section aria-labelledby="seguridad" className="flex flex-col gap-3">
         <h2 id="seguridad" className="flex items-center gap-2 text-lg text-text">
           <ShieldCheck aria-hidden className="size-5 text-text-muted" />

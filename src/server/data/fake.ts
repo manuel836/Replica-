@@ -471,6 +471,21 @@ export const fakeStore: DataStore = {
     const a = db().admins.find((x) => x.id === adminId);
     if (a) a.sessionVersion++;
   },
+  async listAdmins(businessId) {
+    return clone(db().admins.filter((a) => a.businessId === businessId));
+  },
+  async addAdmin(businessId, email, role) {
+    const e = email.trim().toLowerCase();
+    if (db().admins.some((a) => a.email === e)) throw new Error("admin_users_email");
+    const a: AdminUser = { id: randomUUID(), businessId, email: e, role, sessionVersion: 1 };
+    db().admins.push(a);
+    return clone(a);
+  },
+  async removeAdmin(businessId, id) {
+    const d = db();
+    d.admins = d.admins.filter((a) => !(a.id === id && a.businessId === businessId));
+    d.loginTokens = d.loginTokens.filter((t) => t.adminId !== id || d.admins.some((a) => a.id === id));
+  },
   async createLoginToken(adminId, tokenHash, expiresAt) {
     db().loginTokens.push({ adminId, tokenHash, expiresAt, usedAt: null });
   },

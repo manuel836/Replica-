@@ -318,6 +318,19 @@ export const postgresStore: DataStore = {
   async bumpSessionVersion(adminId) {
     await q()`update admin_users set session_version = session_version + 1 where id = ${adminId}`;
   },
+  async listAdmins(businessId) {
+    // "owner" > "helper" en orden alfabético inverso: el dueño va primero.
+    return (await q()`select * from admin_users where business_id = ${businessId} order by role desc, created_at`).map(admin);
+  },
+  async addAdmin(businessId, email, role) {
+    const [r] = await q()`insert into admin_users (business_id, email, role)
+      values (${businessId}, ${email.trim().toLowerCase()}, ${role}) returning *`;
+    return admin(r);
+  },
+  async removeAdmin(businessId, id) {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+    await q()`delete from admin_users where id = ${id} and business_id = ${businessId}`;
+  },
   async createLoginToken(adminId, tokenHash, expiresAt) {
     await q()`insert into login_tokens (admin_id, token_hash, expires_at) values (${adminId}, ${tokenHash}, ${expiresAt})`;
   },

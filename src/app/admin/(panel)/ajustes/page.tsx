@@ -40,6 +40,9 @@ export default async function SettingsPage() {
         <a href="/admin/clientes" className="flex min-h-11 items-center rounded-md border border-border bg-surface px-3 font-semibold text-text">
           Clientes
         </a>
+        <a href="/admin/equipo" className="flex min-h-11 items-center rounded-md border border-border bg-surface px-3 font-semibold text-text">
+          Equipo
+        </a>
       </nav>
       <BusinessPhotos photos={b.photoPaths} />
       <SettingsForm
@@ -64,7 +67,11 @@ export default async function SettingsPage() {
         defaults={DEFAULT_TEMPLATES}
       />
       <p className="border-t border-border pt-6 text-sm text-text-muted">
-        Para cerrar tus sesiones en todos tus dispositivos, ve a{" "}
+        Para dar o quitar acceso a un ayudante, ve a{" "}
+        <a href="/admin/equipo" className="font-semibold text-accent-text underline underline-offset-4">
+          Equipo
+        </a>
+        . Para cerrar tus sesiones en todos tus dispositivos, ve a{" "}
         <a href="/admin/cuenta" className="font-semibold text-accent-text underline underline-offset-4">
           Mi cuenta
         </a>

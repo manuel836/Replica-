@@ -102,6 +102,10 @@ export interface DataStore {
   findAdminByEmail(email: string): Promise<AdminUser | null>;
   getAdmin(id: string): Promise<AdminUser | null>;
   bumpSessionVersion(adminId: string): Promise<void>;
+  listAdmins(businessId: string): Promise<AdminUser[]>;
+  addAdmin(businessId: string, email: string, role: AdminUser["role"]): Promise<AdminUser>;
+  /** Borra a la persona: sus sesiones dejan de servir y sus enlaces de entrada también. */
+  removeAdmin(businessId: string, id: string): Promise<void>;
 
   /** Enlaces mágicos: se guarda el hash; consumir es de un solo uso y atómico. */
   createLoginToken(adminId: string, tokenHash: string, expiresAt: Date): Promise<void>;
