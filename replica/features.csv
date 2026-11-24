@@ -34,7 +34,7 @@ Aceptar o rechazar una solicitud,admin agenda,must,yes,yes,Equivale a las solici
 Proponer otra fecha al cliente,admin agenda,should,yes,yes,S12 · Build: S12 y respuesta del cliente en S07
 Mensaje de WhatsApp ya escrito al cliente desde el detalle,avisos,must,no,yes,wa.me con plantilla según el estado (S12) · Build: S12; queda registrado en el historial
 Marcar anticipo o saldo como pagado (efectivo / transferencia),pagos,must,no,yes,S12 · Build: S12
-Reembolsar un anticipo pagado en línea,pagos,should,yes,partial,S12 por la API del proveedor de pagos · Backend: reembolso real en Mercado Pago al rechazar o cancelar (idempotente); falta botón de reembolso parcial
+Reembolsar un anticipo pagado en línea,pagos,should,yes,yes,S12 por la API del proveedor de pagos · Backend: reembolso completo al rechazar o cancelar y parcial desde S12 (solo el dueño); idempotente; al cancelar se devuelve solo lo que falte
 Marcar la taquiza como completada o no realizada,admin agenda,should,yes,yes,S12 · Build: S12
 Notas internas en la taquiza,admin agenda,should,yes,yes,S12 · Build: S12
 Registrar a mano una taquiza que llegó por teléfono o Facebook,admin agenda,must,yes,yes,"Equivale a ""agregar reservación"" del panel del restaurante (S13) · Build: S13; con opción de forzar día lleno"

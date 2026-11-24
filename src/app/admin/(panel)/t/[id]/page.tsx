@@ -7,11 +7,13 @@ import { PriceSummary } from "@/components/ui/PriceSummary";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatMXN } from "@/lib/format";
 import type { BookingEvent, Payment } from "@/lib/types";
+import { requireAdminPage } from "@/server/auth";
 import { EMAIL_LABELS } from "@/server/customer-email";
+import { moneySummary, refundableCents } from "@/server/domain/money";
 import { TEMPLATE_LABELS } from "@/server/domain/messages";
 import { formatDateLong, formatStamp, localTime } from "@/server/domain/time";
 import { bookingDetail, suggestedTemplate } from "@/server/services/views";
-import { BookingActions, NotesForm, PaymentForm } from "./DetailClient";
+import { BookingActions, NotesForm, PaymentForm, RefundForm } from "./DetailClient";
 
 export const metadata = { title: "Taquiza" };
 
@@ -63,11 +65,10 @@ export default async function BookingDetailPage({
   if (!d) notFound();
   const { business, booking, customer, pkg, zone, payments, events } = d;
   const tz = business.timezone;
-  const paid = payments
-    .filter((p) => p.status === "approved" && p.kind !== "refund")
-    .reduce((s, p) => s + p.amountCents, 0);
-  const refunded = payments.filter((p) => p.kind === "refund").reduce((s, p) => s + p.amountCents, 0);
-  const balance = booking.totalCents - paid + refunded;
+  const money = moneySummary(payments, booking.totalCents);
+  const admin = await requireAdminPage();
+  const onlineDeposit = payments.find((p) => p.kind === "deposit" && p.status === "approved" && p.provider !== "manual");
+  const refundable = onlineDeposit ? refundableCents(onlineDeposit, payments) : 0;
   const suggested = suggestedTemplate(booking);
   const fullAddress = [booking.address, booking.neighborhood, business.city].filter(Boolean).join(", ");
 
@@ -184,9 +185,12 @@ export default async function BookingDetailPage({
               </ul>
             )}
             <p className="text-sm text-text">
-              Pagado: <strong>{formatMXN(paid - refunded)}</strong> · Por cobrar: <strong>{formatMXN(Math.max(0, balance))}</strong>
+              Pagado: <strong>{formatMXN(money.paidCents)}</strong> · Por cobrar: <strong>{formatMXN(money.dueCents)}</strong>
             </p>
-            <PaymentForm id={booking.id} suggestedPesos={Math.max(0, balance) / 100} />
+            <div className="flex flex-wrap gap-2">
+              <PaymentForm id={booking.id} suggestedPesos={money.dueCents / 100} />
+              {admin.role === "owner" && refundable > 0 && <RefundForm id={booking.id} maxCents={refundable} />}
+            </div>
           </section>
 
           <NotesForm id={booking.id} initial={booking.internalNotes} />

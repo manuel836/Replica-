@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, CalendarClock, CheckCheck, Link2, Save, UserX, X } from "lucide-react";
+import { Check, CalendarClock, CheckCheck, Link2, Save, Undo2, UserX, X } from "lucide-react";
 import type { BookingStatus } from "@/lib/types";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Feedback";
@@ -18,9 +18,11 @@ import {
   marcarNoRealizada,
   proponerOtraFecha,
   rechazarTaquiza,
+  reembolsarAnticipo,
   regenerarEnlace,
   registrarPago,
 } from "@/server/actions/admin";
+import { formatMXN } from "@/lib/format";
 import { NETWORK_ERROR, safe } from "@/lib/safe-action";
 
 type Result = { ok: true; data?: unknown } | { ok: false; error: string; code?: string };
@@ -315,6 +317,62 @@ export function PaymentForm({ id, suggestedPesos }: { id: string; suggestedPesos
         ]}
       />
       <TextField label="Monto en pesos" inputMode="decimal" value={pesos} onChange={(e) => setPesos(e.target.value)} error={error ?? undefined} />
+    </Modal>
+  );
+}
+
+/** Reembolso de una parte del anticipo pagado en línea (solo el dueño la ve). */
+export function RefundForm({ id, maxCents }: { id: string; maxCents: number }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [pesos, setPesos] = useState("");
+  const [reason, setReason] = useState("");
+  const [key, setKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) {
+          // Una llave por intento: si el clic se repite, Mercado Pago no reembolsa dos veces.
+          setKey(crypto.randomUUID());
+          setPesos("");
+          setReason("");
+          setError(null);
+        }
+      }}
+      trigger={
+        <Button variant="secondary" className="w-fit">
+          <Undo2 aria-hidden className="size-4" />
+          Reembolsar parte del anticipo
+        </Button>
+      }
+      title="Reembolsar parte del anticipo"
+      footer={
+        <Button
+          loading={busy}
+          onClick={async () => {
+            setBusy(true);
+            const r = await safe(reembolsarAnticipo)(id, { pesos, reason, key });
+            setBusy(false);
+            if (!r.ok) return setError(r.error);
+            toast.success(r.data.refundedCents > 0 ? `Reembolsaste ${formatMXN(r.data.refundedCents)}` : "Ese reembolso ya estaba hecho");
+            setOpen(false);
+            router.refresh();
+          }}
+        >
+          Reembolsar
+        </Button>
+      }
+    >
+      <p className="text-sm text-text-muted">
+        Se devuelve a la tarjeta del cliente por Mercado Pago. Puedes reembolsar hasta {formatMXN(maxCents)}. Si cancelas
+        la taquiza después, se devuelve lo que falte.
+      </p>
+      <TextField label="Monto en pesos" inputMode="decimal" value={pesos} onChange={(e) => setPesos(e.target.value)} error={error ?? undefined} />
+      <TextField label="Motivo" optional value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Llegamos tarde, menos invitados…" />
     </Modal>
   );
 }

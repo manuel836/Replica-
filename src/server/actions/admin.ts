@@ -123,6 +123,18 @@ export async function registrarPago(id: string, raw: { kind: string; method: str
   });
 }
 
+export async function reembolsarAnticipo(id: string, raw: { pesos: string; reason: string; key: string }) {
+  return run(async () => {
+    await requireAdmin("owner");
+    const pesos = Number(raw.pesos.replace(/[$,\s]/g, ""));
+    if (!Number.isFinite(pesos) || pesos <= 0) throw new AppError("Escribe un monto mayor a cero.", "amount", "amount");
+    const key = z.string().regex(/^[A-Za-z0-9-]{8,64}$/).parse(raw.key);
+    const r = await bookings.refundDepositPart(id, Math.round(pesos * 100), raw.reason.trim().slice(0, 300), key);
+    refresh(id);
+    return r;
+  });
+}
+
 export async function regenerarEnlace(id: string) {
   return run(async () => {
     await requireAdmin();

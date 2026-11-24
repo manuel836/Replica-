@@ -5,6 +5,7 @@ con la capa de datos en memoria y la imitación de Mercado Pago y Resend.
 Build: `511d405`. Fecha: 2026-11-24.
 
 Resumen: **7 bugs reproducidos**: 0 S1, 1 S2, 5 S3, 1 S4. **Los 7 están corregidos.**
+Después, en `/replica-build` (reembolso parcial), apareció BUG-008 (S3), también corregido.
 Cada uno tiene una prueba que falló antes de la corrección y pasa después. Suite final: 53/53 con
 datos en memoria y 55/55 con Postgres.
 
@@ -127,6 +128,24 @@ Actual: el título es un `h3` (el de EmptyState); axe reporta `page-has-heading-
 Evidence: `replica/bugs/BUG-007.png`; prueba `F01-N1`.
 Suspected cause: EmptyState siempre usa `h3`.
 Status: fixed in da63f7c (la prueba falló antes y pasa después)
+
+### BUG-008: después de un reembolso completo, "Pagado" sale en negativo
+
+- Severity: S3
+- Flow / case: F05 / S12-N0
+- Screen: S12
+- Build: 24a0f54  Browser / device: Chromium 1243, 1280 px
+
+Steps
+1. Agendar con anticipo en línea y pagarlo.
+2. El cliente cancela dentro del plazo (se le devuelve el anticipo).
+3. El dueño abre el detalle de la taquiza.
+
+Expected: "Pagado: $0".
+Actual: "Pagado: -$1,800 · Por cobrar: $7,800". El dinero real está bien; el error es solo de la suma en pantalla.
+Evidence: `replica/bugs/BUG-008.png`; prueba `S12-N0`.
+Suspected cause: el reembolso se restaba dos veces: el anticipo reembolsado ya no contaba como pagado y además se restaba el reembolso.
+Status: fixed in the commit "build: S12 partial refund" (la prueba falló antes y pasa después). La suma vive ahora en `src/server/domain/money.ts`.
 
 ---
 

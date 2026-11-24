@@ -89,7 +89,12 @@ createServer(async (req, res) => {
       const body = JSON.parse((await readBody(req)) || "{}");
       const resp = { id: 7000000 + state.refunds.length, payment_id: Number(m[1]), amount: body.amount, status: "approved" };
       state.refunds.push({ idem, resp });
-      if (state.payments[m[1]]) state.payments[m[1]].status = "refunded";
+      // Como Mercado Pago: un reembolso parcial deja el pago "approved"; el total lo pasa a "refunded".
+      const pay = state.payments[m[1]];
+      if (pay) {
+        const total = state.refunds.filter((x) => x.resp.payment_id === Number(m[1])).reduce((s, x) => s + (x.resp.amount ?? 0), 0);
+        if (body.amount === undefined || total >= pay.transaction_amount) pay.status = "refunded";
+      }
       return json(res, 201, resp);
     }
     // ---- Resend ----

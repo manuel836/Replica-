@@ -28,7 +28,8 @@ export interface PaymentProvider {
   readonly simulated: boolean;
   createCheckout(req: CheckoutRequest): Promise<{ url: string; checkoutRef: string }>;
   getPayment(providerRef: string): Promise<ProviderPayment>;
-  refund(payment: Payment, amountCents: number): Promise<{ providerRef: string }>;
+  /** idempotencyKey: misma llave = mismo reembolso, aunque la petición se repita. */
+  refund(payment: Payment, amountCents: number, idempotencyKey?: string): Promise<{ providerRef: string }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,12 +128,12 @@ const mercadoPago: PaymentProvider = {
       currency: p.currency_id,
     };
   },
-  async refund(payment, amountCents) {
+  async refund(payment, amountCents, idempotencyKey) {
     if (!payment.providerRef) throw new Error("El pago no tiene referencia del proveedor");
     const r = await mp<{ id: number | string }>(`/v1/payments/${payment.providerRef}/refunds`, {
       method: "POST",
       // Misma llave por pago: si se reintenta, Mercado Pago no reembolsa dos veces.
-      idempotencyKey: `refund-${payment.id}-${amountCents}`,
+      idempotencyKey: idempotencyKey ?? `refund-${payment.id}-${amountCents}`,
       body: { amount: amountCents / 100 },
     });
     return { providerRef: String(r.id) };

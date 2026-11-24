@@ -1,8 +1,10 @@
 import "server-only";
 import { randomInt } from "node:crypto";
 import type { Booking, BookingEvent, Business, Customer, Package, Payment } from "@/lib/types";
+import { formatMXN } from "@/lib/format";
 import { store } from "@/server/data";
 import { CONFLICT_MESSAGE } from "@/server/domain/availability";
+import { refundableCents } from "@/server/domain/money";
 import { priceFor } from "@/server/domain/pricing";
 import { addDaysLocal, formatDateLong, localTime, todayLocal } from "@/server/domain/time";
 import { AppError } from "@/server/errors";
@@ -338,27 +340,65 @@ export async function applyProviderPayment(p: {
   return result;
 }
 
+/** Devuelve lo que quede del anticipo en línea (todo, o lo que falte si ya hubo un reembolso parcial). */
 async function refundOnlineDeposit(booking: Booking, actor: BookingEvent["actor"]): Promise<number> {
   const db = store();
   const deposit = await approvedDeposit(booking.id);
   if (!deposit || deposit.provider === "manual") return 0;
-  const { providerRef } = await paymentProvider().refund(deposit, deposit.amountCents);
-  await db.updatePayment(deposit.id, { status: "refunded" });
+  const remaining = refundableCents(deposit, await db.listPayments(booking.id));
+  if (remaining <= 0) return 0;
+  const { providerRef } = await paymentProvider().refund(deposit, remaining);
+  await recordRefund(booking, deposit, remaining, providerRef, remaining);
+  await event(booking, "refund", actor, { amountCents: remaining });
+  return remaining;
+}
+
+async function recordRefund(booking: Booking, deposit: Payment, amountCents: number, providerRef: string, remainingBefore: number) {
+  const db = store();
+  if (amountCents >= remainingBefore) await db.updatePayment(deposit.id, { status: "refunded" });
   await db.addPayment({
     businessId: booking.businessId,
     bookingId: booking.id,
     kind: "refund",
     method: deposit.method,
     provider: deposit.provider,
-    amountCents: deposit.amountCents,
+    amountCents,
     status: "approved",
     checkoutRef: null,
     providerRef,
     refundOf: deposit.id,
     paidAt: new Date(),
   });
-  await event(booking, "refund", actor, { amountCents: deposit.amountCents });
-  return deposit.amountCents;
+}
+
+/**
+ * Reembolso de una parte del anticipo pagado en línea (solo el dueño). requestKey viene del
+ * diálogo: si la misma petición llega dos veces, Mercado Pago devuelve el mismo reembolso y
+ * aquí no se registra dos veces.
+ */
+export async function refundDepositPart(
+  id: string,
+  amountCents: number,
+  reason: string,
+  requestKey: string,
+): Promise<{ refundedCents: number; remainingCents: number }> {
+  const db = store();
+  const business = await db.getBusiness();
+  const booking = await db.getBooking(business.id, id);
+  if (!booking) throw new AppError("No encontramos esa taquiza.", "not_found");
+  if (!Number.isInteger(amountCents) || amountCents <= 0) throw new AppError("Escribe un monto mayor a cero.", "amount", "amount");
+  return db.withDayLock(business.id, [booking.eventDate], async () => {
+    const deposit = await approvedDeposit(booking.id);
+    if (!deposit || deposit.provider === "manual")
+      throw new AppError("No hay un anticipo pagado en línea para reembolsar.", "no_deposit");
+    const remaining = refundableCents(deposit, await db.listPayments(booking.id));
+    if (amountCents > remaining) throw new AppError(`Puedes reembolsar hasta ${formatMXN(remaining)}.`, "amount", "amount");
+    const { providerRef } = await paymentProvider().refund(deposit, amountCents, `refund-${deposit.id}-${requestKey}`);
+    if (await db.findPayment(deposit.provider, providerRef)) return { refundedCents: 0, remainingCents: remaining };
+    await recordRefund(booking, deposit, amountCents, providerRef, remaining);
+    await event(booking, "refund", "business", { amountCents, partial: amountCents < remaining, reason: reason || undefined });
+    return { refundedCents: amountCents, remainingCents: remaining - amountCents };
+  });
 }
 
 // ---------------------------------------------------------------------------
