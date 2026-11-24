@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { toast } from "@/components/ui/Toast";
 import { quitarFotoNegocio, subirFotoNegocio } from "@/server/actions/settings";
+import { safe } from "@/lib/safe-action";
 
 /** Fotos de la galería pública (S01). Máximo 8. */
 export function BusinessPhotos({ photos }: { photos: string[] }) {
@@ -26,7 +27,7 @@ export function BusinessPhotos({ photos }: { photos: string[] }) {
                 aria-label={`Quitar foto ${i + 1}`}
                 className="absolute top-1 right-1 flex size-11 items-center justify-center rounded-pill bg-ink/70 text-on-ink hover:bg-ink"
                 onClick={async () => {
-                  const r = await quitarFotoNegocio(url);
+                  const r = await safe(quitarFotoNegocio)(url);
                   if (!r.ok) return toast.error(r.error);
                   toast.success("Foto quitada");
                   router.refresh();

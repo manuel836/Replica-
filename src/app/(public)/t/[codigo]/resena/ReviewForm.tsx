@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/Feedback";
 import { TextareaField } from "@/components/ui/Field";
 import { StarsInput } from "@/components/ui/Misc";
 import { enviarResena } from "@/server/actions/public";
+import { safe } from "@/lib/safe-action";
 
 export function ReviewForm({ code, token }: { code: string; token: string }) {
   const [rating, setRating] = useState(0);
@@ -29,7 +30,7 @@ export function ReviewForm({ code, token }: { code: string; token: string }) {
         e.preventDefault();
         if (rating < 1) return setError("Elige de 1 a 5 estrellas.");
         setBusy(true);
-        const r = await enviarResena(code, token, rating, comment);
+        const r = await safe(enviarResena)(code, token, rating, comment);
         setBusy(false);
         if (!r.ok) return setError(r.error);
         setSent(true);

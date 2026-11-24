@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/Feedback";
 import { PhoneField, SelectField, TextareaField, TextField } from "@/components/ui/Field";
 import { toast } from "@/components/ui/Toast";
 import { guardarAjustes } from "@/server/actions/settings";
+import { safe } from "@/lib/safe-action";
 
 interface Values {
   name: string;
@@ -51,7 +52,7 @@ export function SettingsForm({
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
-        const r = await guardarAjustes(v);
+        const r = await safe(guardarAjustes)(v);
         setBusy(false);
         if (!r.ok) {
           setErrors((r as { fields?: Record<string, string> }).fields ?? {});

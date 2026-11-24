@@ -8,6 +8,7 @@ import { TextareaField } from "@/components/ui/Field";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toast";
 import { anonimizarCliente, guardarNotasCliente } from "@/server/actions/settings";
+import { safe } from "@/lib/safe-action";
 
 export function CustomerTools({ id, notes: initial, canAnonymize }: { id: string; notes: string; canAnonymize: boolean }) {
   const router = useRouter();
@@ -23,7 +24,7 @@ export function CustomerTools({ id, notes: initial, canAnonymize }: { id: string
           disabled={notes === initial}
           onClick={async () => {
             setBusy(true);
-            const r = await guardarNotasCliente(id, notes);
+            const r = await safe(guardarNotasCliente)(id, notes);
             setBusy(false);
             if (!r.ok) return toast.error(r.error);
             toast.success("Notas guardadas");
@@ -45,7 +46,7 @@ export function CustomerTools({ id, notes: initial, canAnonymize }: { id: string
             description="Se quitan su nombre, teléfono, correo y direcciones. Los montos de sus taquizas se conservan para tus cuentas. No se puede deshacer."
             confirmLabel="Borrar datos"
             onConfirm={async () => {
-              const r = await anonimizarCliente(id);
+              const r = await safe(anonimizarCliente)(id);
               if (!r.ok) return void toast.error(r.error);
               toast.success("Datos borrados");
               router.refresh();

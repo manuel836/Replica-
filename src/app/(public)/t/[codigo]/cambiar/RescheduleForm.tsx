@@ -11,6 +11,7 @@ import { GuestStepper } from "@/components/ui/GuestStepper";
 import { TimeSlots, type Slot } from "@/components/ui/TimeSlots";
 import { formatMXN } from "@/lib/format";
 import { cambiarTaquiza, diasDelMes, horariosDelDia } from "@/server/actions/public";
+import { NETWORK_ERROR, safe } from "@/lib/safe-action";
 
 interface Props {
   code: string;
@@ -44,10 +45,13 @@ export function RescheduleForm(p: Props) {
     let alive = true;
     setLoading(true);
     const t = setTimeout(async () => {
-      const r = await diasDelMes(format(month, "yyyy-MM"), guests, p.code, p.token);
-      if (alive) {
-        setDays(r);
-        setLoading(false);
+      try {
+        const r = await diasDelMes(format(month, "yyyy-MM"), guests, p.code, p.token);
+        if (alive) setDays(r);
+      } catch {
+        if (alive) setError(NETWORK_ERROR);
+      } finally {
+        if (alive) setLoading(false);
       }
     }, 250);
     return () => {
@@ -60,7 +64,13 @@ export function RescheduleForm(p: Props) {
     if (!date) return;
     let alive = true;
     setSlots(null);
-    horariosDelDia(date, guests, p.code, p.token).then((s) => alive && setSlots(s));
+    horariosDelDia(date, guests, p.code, p.token)
+      .then((s) => alive && setSlots(s))
+      .catch(() => {
+        if (!alive) return;
+        setSlots([]);
+        setError(NETWORK_ERROR);
+      });
     return () => {
       alive = false;
     };
@@ -129,7 +139,7 @@ export function RescheduleForm(p: Props) {
           onClick={async () => {
             setBusy(true);
             setError(null);
-            const r = await cambiarTaquiza(p.code, p.token, { date: date!, time: time!, guests });
+            const r = await safe(cambiarTaquiza)(p.code, p.token, { date: date!, time: time!, guests });
             if (!r.ok) {
               setBusy(false);
               setError(r.error);

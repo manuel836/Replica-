@@ -11,6 +11,7 @@ import { toast } from "@/components/ui/Toast";
 import { formatMXN } from "@/lib/format";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { activarPaquete, guardarPaquete, moverPaquete, quitarFotoPaquete, subirFotoPaquete } from "@/server/actions/settings";
+import { safe } from "@/lib/safe-action";
 
 interface Row {
   id: string;
@@ -52,7 +53,7 @@ export function PackagesManager({ packages }: { packages: Row[] }) {
           loading={busy}
           onClick={async () => {
             setBusy(true);
-            const r = await guardarPaquete(editing);
+            const r = await safe(guardarPaquete)(editing);
             setBusy(false);
             if (!r.ok) {
               setErrors((r as { fields?: Record<string, string> }).fields ?? {});
@@ -132,17 +133,17 @@ export function PackagesManager({ packages }: { packages: Row[] }) {
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-1">
-                <Button size="sm" variant="ghost" aria-label={`Subir ${p.name}`} disabled={i === 0} onClick={async () => { await moverPaquete(p.id, -1); router.refresh(); }}>
+                <Button size="sm" variant="ghost" aria-label={`Subir ${p.name}`} disabled={i === 0} onClick={async () => { await safe(moverPaquete)(p.id, -1); router.refresh(); }}>
                   <ArrowUp aria-hidden className="size-4" />
                 </Button>
-                <Button size="sm" variant="ghost" aria-label={`Bajar ${p.name}`} disabled={i === packages.length - 1} onClick={async () => { await moverPaquete(p.id, 1); router.refresh(); }}>
+                <Button size="sm" variant="ghost" aria-label={`Bajar ${p.name}`} disabled={i === packages.length - 1} onClick={async () => { await safe(moverPaquete)(p.id, 1); router.refresh(); }}>
                   <ArrowDown aria-hidden className="size-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="secondary"
                   onClick={async () => {
-                    const r = await activarPaquete(p.id, !p.isActive);
+                    const r = await safe(activarPaquete)(p.id, !p.isActive);
                     if (!r.ok) return toast.error(r.error);
                     toast.success(p.isActive ? "Paquete oculto" : "Paquete disponible");
                     router.refresh();
@@ -157,7 +158,7 @@ export function PackagesManager({ packages }: { packages: Row[] }) {
                     variant="ghost"
                     aria-label={`Quitar foto de ${p.name}`}
                     onClick={async () => {
-                      const r = await quitarFotoPaquete(p.id);
+                      const r = await safe(quitarFotoPaquete)(p.id);
                       if (!r.ok) return toast.error(r.error);
                       toast.success("Foto quitada");
                       router.refresh();

@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toast";
 import { formatMXN } from "@/lib/format";
 import { cancelarTaquiza, pagarAnticipo, responderPropuesta } from "@/server/actions/public";
+import { safe } from "@/lib/safe-action";
 
 interface Props {
   code: string;
@@ -50,7 +51,7 @@ export function ManageActions({ code, token, status, canPay, depositLabel, cance
             disabled={responding !== null}
             onClick={async () => {
               setResponding("yes");
-              const r = await responderPropuesta(code, token, true);
+              const r = await safe(responderPropuesta)(code, token, true);
               setResponding(null);
               if (!r.ok) return setError(r.error);
               toast.success("¡Listo! Aceptaste la nueva fecha.");
@@ -66,7 +67,7 @@ export function ManageActions({ code, token, status, canPay, depositLabel, cance
             disabled={responding !== null}
             onClick={async () => {
               setResponding("no");
-              const r = await responderPropuesta(code, token, false);
+              const r = await safe(responderPropuesta)(code, token, false);
               setResponding(null);
               if (!r.ok) return setError(r.error);
               router.refresh();
@@ -85,7 +86,7 @@ export function ManageActions({ code, token, status, canPay, depositLabel, cance
             onClick={async () => {
               setPaying(true);
               setError(null);
-              const r = await pagarAnticipo(code, token);
+              const r = await safe(pagarAnticipo)(code, token);
               if (!r.ok) {
                 setPaying(false);
                 return setError(r.error);
@@ -110,7 +111,7 @@ export function ManageActions({ code, token, status, canPay, depositLabel, cance
           confirmLabel="Sí, cancelar"
           cancelLabel="No, mantenerla"
           onConfirm={async () => {
-            const r = await cancelarTaquiza(code, token, reason);
+            const r = await safe(cancelarTaquiza)(code, token, reason);
             if (!r.ok) {
               setError(r.error);
               return;

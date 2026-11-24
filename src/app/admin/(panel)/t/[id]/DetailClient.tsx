@@ -21,6 +21,7 @@ import {
   regenerarEnlace,
   registrarPago,
 } from "@/server/actions/admin";
+import { NETWORK_ERROR, safe } from "@/lib/safe-action";
 
 type Result = { ok: true; data?: unknown } | { ok: false; error: string; code?: string };
 
@@ -78,7 +79,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => act("force", () => aceptarTaquiza(id, true), "Aceptada (se forzó la capacidad)")}
+                onClick={() => act("force", () => safe(aceptarTaquiza)(id, true), "Aceptada (se forzó la capacidad)")}
               >
                 Aceptar de todos modos
               </Button>
@@ -94,7 +95,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
 
       <div className="flex flex-wrap gap-2">
         {(pending || needsAttention) && status !== "confirmed" && (
-          <Button size="lg" loading={busy === "accept"} onClick={() => act("accept", () => aceptarTaquiza(id), "Taquiza aceptada")}>
+          <Button size="lg" loading={busy === "accept"} onClick={() => act("accept", () => safe(aceptarTaquiza)(id), "Taquiza aceptada")}>
             <Check aria-hidden className="size-5" />
             Aceptar
           </Button>
@@ -112,7 +113,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
             description={hasOnlineDeposit ? "Se devuelve el anticipo completo al cliente." : "La fecha se libera para otros clientes."}
             confirmLabel="Rechazar"
             onConfirm={async () => {
-              handle(await rechazarTaquiza(id, reason), "Solicitud rechazada");
+              handle(await safe(rechazarTaquiza)(id, reason), "Solicitud rechazada");
             }}
           >
             <TextareaField label="Motivo para el cliente" optional rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
@@ -120,7 +121,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
         )}
         {status === "confirmed" && (
           <>
-            <Button loading={busy === "done"} onClick={() => act("done", () => completarTaquiza(id), "Marcada como completada")}>
+            <Button loading={busy === "done"} onClick={() => act("done", () => safe(completarTaquiza)(id), "Marcada como completada")}>
               <CheckCheck aria-hidden className="size-5" />
               Completada
             </Button>
@@ -135,7 +136,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
               description="Por ejemplo, si al llegar no había nadie."
               confirmLabel="Marcar"
               onConfirm={async () => {
-                handle(await marcarNoRealizada(id, reason), "Marcada como no realizada");
+                handle(await safe(marcarNoRealizada)(id, reason), "Marcada como no realizada");
               }}
             >
               <TextareaField label="¿Qué pasó?" optional rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
@@ -151,7 +152,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
             }
             confirmLabel="Sí, cancelar"
             onConfirm={async () => {
-              handle(await cancelarPorNegocio(id, reason), "Taquiza cancelada");
+              handle(await safe(cancelarPorNegocio)(id, reason), "Taquiza cancelada");
             }}
           >
             <TextareaField label="Motivo para el cliente" optional rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
@@ -169,7 +170,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
           confirmLabel="Cambiar enlace"
           tone="primary"
           onConfirm={async () => {
-            handle(await regenerarEnlace(id), "Enlace nuevo listo", "Mandar el enlace nuevo por WhatsApp");
+            handle(await safe(regenerarEnlace)(id), "Enlace nuevo listo", "Mandar el enlace nuevo por WhatsApp");
           }}
         />
       </div>
@@ -190,8 +191,14 @@ function ProposeDialog({ id, guests, onDone }: { id: string; guests: number; onD
     setTime(undefined);
     setSlots(null);
     if (!d) return;
-    const res = await fetch(`/api/disponibilidad/dia?fecha=${d}&invitados=${guests}`, { cache: "no-store" });
-    setSlots(res.ok ? await res.json() : []);
+    try {
+      const res = await fetch(`/api/disponibilidad/dia?fecha=${d}&invitados=${guests}`, { cache: "no-store" });
+      if (!res.ok) throw new Error();
+      setSlots(await res.json());
+    } catch {
+      setSlots([]);
+      setError(NETWORK_ERROR);
+    }
   }
 
   return (
@@ -212,7 +219,7 @@ function ProposeDialog({ id, guests, onDone }: { id: string; guests: number; onD
           loading={busy}
           onClick={async () => {
             setBusy(true);
-            const r = await proponerOtraFecha(id, date, time!);
+            const r = await safe(proponerOtraFecha)(id, date, time!);
             setBusy(false);
             if (!r.ok) return setError(r.error);
             if (onDone(r, "Propuesta guardada")) setOpen(false);
@@ -238,7 +245,7 @@ export function NotesForm({ id, initial }: { id: string; initial: string }) {
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
-        const r = await guardarNotas(id, notes);
+        const r = await safe(guardarNotas)(id, notes);
         setBusy(false);
         if (r.ok) toast.success("Notas guardadas");
         else toast.error(r.error);
@@ -277,7 +284,7 @@ export function PaymentForm({ id, suggestedPesos }: { id: string; suggestedPesos
           loading={busy}
           onClick={async () => {
             setBusy(true);
-            const r = await registrarPago(id, { kind, method, pesos });
+            const r = await safe(registrarPago)(id, { kind, method, pesos });
             setBusy(false);
             if (!r.ok) return setError(r.error);
             toast.success("Pago registrado");

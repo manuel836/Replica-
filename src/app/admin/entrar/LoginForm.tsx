@@ -6,6 +6,7 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Feedback";
 import { TextField } from "@/components/ui/Field";
 import { pedirEnlaceAcceso } from "@/server/actions/admin";
+import { safe } from "@/lib/safe-action";
 
 export function LoginForm({ linkError, signedOutEverywhere = false }: { linkError: boolean; signedOutEverywhere?: boolean }) {
   const [email, setEmail] = useState("");
@@ -38,7 +39,7 @@ export function LoginForm({ linkError, signedOutEverywhere = false }: { linkErro
         e.preventDefault();
         setBusy(true);
         setError(null);
-        const r = await pedirEnlaceAcceso(email);
+        const r = await safe(pedirEnlaceAcceso)(email);
         setBusy(false);
         if (!r.ok) return setError(r.error);
         setSent({ devLink: r.devLink });

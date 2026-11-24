@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { pagarAnticipo } from "@/server/actions/public";
+import { safe } from "@/lib/safe-action";
 
 export function RetryPayment({ code, token, manageHref }: { code: string; token: string; manageHref: string }) {
   const [busy, setBusy] = useState(false);
@@ -14,7 +15,7 @@ export function RetryPayment({ code, token, manageHref }: { code: string; token:
           loading={busy}
           onClick={async () => {
             setBusy(true);
-            const r = await pagarAnticipo(code, token);
+            const r = await safe(pagarAnticipo)(code, token);
             if (!r.ok) {
               setBusy(false);
               return setError(r.error);

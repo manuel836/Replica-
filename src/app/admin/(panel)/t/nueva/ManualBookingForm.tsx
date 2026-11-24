@@ -10,6 +10,7 @@ import { GuestStepper } from "@/components/ui/GuestStepper";
 import type { Slot } from "@/components/ui/TimeSlots";
 import { toast } from "@/components/ui/Toast";
 import { crearTaquizaManual } from "@/server/actions/admin";
+import { NETWORK_ERROR, safe } from "@/lib/safe-action";
 
 interface Props {
   packages: { id: string; name: string; isActive: boolean; minGuests: number }[];
@@ -46,7 +47,12 @@ export function ManualBookingForm({ packages, zones }: Props) {
     let alive = true;
     fetch(`/api/disponibilidad/dia?fecha=${f.date}&invitados=${guests}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : []))
-      .then((s: Slot[]) => alive && setSlots(s));
+      .then((s: Slot[]) => alive && setSlots(s))
+      .catch(() => {
+        if (!alive) return;
+        setSlots([]);
+        setBanner({ text: NETWORK_ERROR, capacity: false });
+      });
     return () => {
       alive = false;
     };
@@ -62,7 +68,7 @@ export function ManualBookingForm({ packages, zones }: Props) {
         e.preventDefault();
         setBusy(true);
         setBanner(null);
-        const r = await crearTaquizaManual({ ...f, guests, force, idempotencyKey: key.current });
+        const r = await safe(crearTaquizaManual)({ ...f, guests, force, idempotencyKey: key.current });
         setBusy(false);
         if (r.ok) {
           toast.success("Taquiza registrada");

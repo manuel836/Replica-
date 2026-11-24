@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { StarsDisplay } from "@/components/ui/Misc";
 import { toast } from "@/components/ui/Toast";
 import { publicarResena } from "@/server/actions/admin";
+import { safe } from "@/lib/safe-action";
 
 /** Reseñas nuevas: el dueño decide si se publican en la página. */
 export function ReviewQueue({ reviews }: { reviews: { id: string; rating: number; comment: string }[] }) {
@@ -31,7 +32,7 @@ export function ReviewQueue({ reviews }: { reviews: { id: string; rating: number
                   size="sm"
                   variant={publish ? "primary" : "secondary"}
                   onClick={async () => {
-                    const res = await publicarResena(r.id, publish);
+                    const res = await safe(publicarResena)(r.id, publish);
                     if (!res.ok) return toast.error(res.error);
                     setHidden((h) => [...h, r.id]);
                     toast.success(publish ? "Reseña publicada" : "Reseña guardada sin publicar");

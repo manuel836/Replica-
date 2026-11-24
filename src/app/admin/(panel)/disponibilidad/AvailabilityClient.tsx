@@ -10,6 +10,7 @@ import { Alert, EmptyState } from "@/components/ui/Feedback";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { toast } from "@/components/ui/Toast";
 import { bloquearFecha, desbloquearFecha, guardarDisponibilidad } from "@/server/actions/settings";
+import { safe } from "@/lib/safe-action";
 
 const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 // Lunes primero, como se usa en México.
@@ -43,7 +44,7 @@ export function AvailabilityForm({ initial }: { initial: Initial }) {
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
-        const r = await guardarDisponibilidad(v);
+        const r = await safe(guardarDisponibilidad)(v);
         setBusy(false);
         if (!r.ok) {
           setErrors((r as { fields?: Record<string, string> }).fields ?? {});
@@ -169,7 +170,7 @@ export function BlockedDates({ dates, today }: { dates: { date: string; reason: 
           e.preventDefault();
           if (!date) return;
           setBusy(true);
-          const r = await bloquearFecha(date, reason);
+          const r = await safe(bloquearFecha)(date, reason);
           setBusy(false);
           if (!r.ok) return toast.error(r.error);
           setAffected(r.data.affected);
@@ -215,7 +216,7 @@ export function BlockedDates({ dates, today }: { dates: { date: string; reason: 
                 size="sm"
                 aria-label={`Desbloquear ${label(d.date)}`}
                 onClick={async () => {
-                  const r = await desbloquearFecha(d.date);
+                  const r = await safe(desbloquearFecha)(d.date);
                   if (!r.ok) return toast.error(r.error);
                   toast.success("Día desbloqueado");
                   router.refresh();

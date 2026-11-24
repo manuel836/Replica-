@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/Feedback";
 import { TextField } from "@/components/ui/Field";
 import { toast } from "@/components/ui/Toast";
 import { guardarZona } from "@/server/actions/settings";
+import { safe } from "@/lib/safe-action";
 
 interface Zone {
   id?: string;
@@ -27,7 +28,7 @@ function ZoneRow({ zone, onSaved }: { zone: Zone; onSaved: () => void }) {
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
-        const r = await guardarZona(z);
+        const r = await safe(guardarZona)(z);
         setBusy(false);
         if (!r.ok) {
           setErrors((r as { fields?: Record<string, string> }).fields ?? {});

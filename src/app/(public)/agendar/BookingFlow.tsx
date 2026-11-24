@@ -18,6 +18,7 @@ import { StepBar } from "@/components/ui/StepBar";
 import { TimeSlots, type Slot } from "@/components/ui/TimeSlots";
 import { Turnstile } from "@/components/Turnstile";
 import { crearTaquiza } from "@/server/actions/public";
+import { safe } from "@/lib/safe-action";
 
 interface Props {
   business: {
@@ -64,6 +65,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
   const [daysError, setDaysError] = useState(false);
   const [date, setDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[] | null>(null);
+  const [slotsError, setSlotsError] = useState(false);
   const [time, setTime] = useState<string | undefined>();
   const [packageId, setPackageId] = useState(() => packages.find((p) => initialGuests >= p.minGuests)?.id ?? "");
   const [form, setForm] = useState({
@@ -162,8 +164,15 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
 
   const loadDay = useCallback(async (d: string, g: number) => {
     setSlots(null);
-    const res = await fetch(`/api/disponibilidad/dia?fecha=${d}&invitados=${g}`, { cache: "no-store" });
-    setSlots(res.ok ? await res.json() : []);
+    setSlotsError(false);
+    try {
+      const res = await fetch(`/api/disponibilidad/dia?fecha=${d}&invitados=${g}`, { cache: "no-store" });
+      if (!res.ok) throw new Error();
+      setSlots(await res.json());
+    } catch {
+      setSlotsError(true);
+      setSlots([]);
+    }
   }, []);
   useEffect(() => {
     if (date) loadDay(date, guests);
@@ -219,7 +228,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
     }
     setSubmitting(true);
     setBanner(null);
-    const res = await crearTaquiza({
+    const res = await safe(crearTaquiza)({
       idempotencyKey: idempotencyKey.current,
       ...form,
       whatsapp: form.whatsapp,
@@ -343,6 +352,18 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
                     Elige un día en el calendario para ver los horarios. Agendamos con al menos {business.minNoticeDays} días de
                     anticipación.
                   </p>
+                ) : slotsError ? (
+                  <Alert
+                    tone="danger"
+                    title="No pudimos cargar los horarios"
+                    action={
+                      <Button size="sm" variant="secondary" onClick={() => loadDay(date, guests)}>
+                        Reintentar
+                      </Button>
+                    }
+                  >
+                    Revisa tu conexión.
+                  </Alert>
                 ) : slots === null ? (
                   <p className="p-4 text-sm text-text-muted">Buscando horarios…</p>
                 ) : (

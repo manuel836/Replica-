@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ImagePlus } from "lucide-react";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toast";
+import { safe } from "@/lib/safe-action";
 
 type Result = { ok: true; data?: unknown } | { ok: false; error: string };
 
@@ -55,7 +56,7 @@ export function PhotoUpload({
           const fd = new FormData();
           for (const [k, v] of Object.entries(fields)) fd.set(k, v);
           fd.set("foto", new File([await shrink(file)], "foto.jpg", { type: "image/jpeg" }));
-          const r = await upload(fd);
+          const r = await safe(upload)(fd);
           setBusy(false);
           if (!r.ok) return toast.error(r.error);
           toast.success("Foto guardada");
