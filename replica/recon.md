@@ -41,8 +41,11 @@ de referencia y nunca se publican.
 4. Zona de cobertura y cargo por traslado (ej. dentro de la ciudad gratis, fuera con costo).
 5. Anticipo: ¿porcentaje (ej. 30 %) o monto fijo? ¿Hasta cuántos días antes se reembolsa?
 6. Número de WhatsApp del negocio.
-7. Confirmar la ciudad: se asume Lázaro Cárdenas, Michoacán (zona horaria
+7. ~~Confirmar la ciudad~~ **Confirmado (2026-11-24):** Lázaro Cárdenas, Michoacán (zona horaria
    `America/Mexico_City`, sin horario de verano).
+
+Las preguntas 1 a 6 quedan pendientes; el dueño las capturará después. En
+`architecture.md` son ajustes del panel con valores de ejemplo, así que no bloquean la construcción.
 
 ## Ciclo central
 
