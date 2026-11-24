@@ -109,7 +109,7 @@ export default async function PoliciesPage() {
             <li>Mercado Pago: cobra el anticipo cuando pagas en línea (nunca vemos los datos de tu tarjeta).</li>
             <li>Supabase: guarda la base de datos y las fotos.</li>
             <li>Vercel: aloja este sitio.</li>
-            <li>Resend: manda los correos de aviso al negocio.</li>
+            <li>Resend: manda los correos de aviso al negocio y, si nos dejaste tu correo, tus confirmaciones y recordatorios.</li>
             <li>Cloudflare Turnstile: revisa que las solicitudes no vengan de robots.</li>
             <li>WhatsApp: los mensajes que te mandamos salen desde la app de WhatsApp del negocio.</li>
           </ul>

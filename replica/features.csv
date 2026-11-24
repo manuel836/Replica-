@@ -19,7 +19,7 @@ Agregar el evento al calendario del cliente (.ics / Google),agendar,should,yes,y
 Ver mi taquiza desde un enlace privado sin cuenta,mi taquiza,must,yes,yes,"Equivale a gestionar la reservación en OpenTable (S07) · Build: S07; token derivado con HMAC, regenerable"
 Cambiar fecha / hora / invitados,mi taquiza,should,yes,yes,Vuelve a revisar disponibilidad (S08) · Build: S08; no se cuenta a sí misma al revisar lugar
 Cancelar mostrando la política de reembolso,mi taquiza,must,yes,yes,S07 · S07; reembolso real en Mercado Pago dentro del plazo
-Recordatorio por WhatsApp antes del evento,avisos,should,yes,partial,En el MVP sale como lista de pendientes con botón wa.me; automático solo con la API de WhatsApp Business · Build: S11 'Recordatorios de mañana' con botón wa.me; sin envío automático
+Recordatorio por WhatsApp antes del evento,avisos,should,yes,partial,En el MVP sale como lista de pendientes con botón wa.me; automático solo con la API de WhatsApp Business · Build: S11 'Recordatorios de mañana' con botón wa.me; el recordatorio automático sale por correo a quien dejó su correo
 Avisos automáticos por WhatsApp (API de WhatsApp Business),avisos,could,yes,no,Requiere cuenta de Meta / plantillas aprobadas / costo por conversación. OpenTable lo hace por SMS y correo · Build: Requiere cuenta de Meta; después del MVP
 Página de políticas y preguntas frecuentes,página pública,should,yes,yes,"S09 · Build: S09; aviso de privacidad provisional, pendiente de revisión legal"
 Dejar reseña después del evento,reseñas,could,yes,yes,Solo clientes con evento completado (así lo hace OpenTable) (S19) · Build: S19
@@ -38,6 +38,7 @@ Reembolsar un anticipo pagado en línea,pagos,should,yes,partial,S12 por la API 
 Marcar la taquiza como completada o no realizada,admin agenda,should,yes,yes,S12 · Build: S12
 Notas internas en la taquiza,admin agenda,should,yes,yes,S12 · Build: S12
 Registrar a mano una taquiza que llegó por teléfono o Facebook,admin agenda,must,yes,yes,"Equivale a ""agregar reservación"" del panel del restaurante (S13) · Build: S13; con opción de forzar día lleno"
+"Correos al cliente: solicitud recibida, confirmación, cambios, cancelación, recordatorio y reseña",avisos,should,yes,yes,"OpenTable manda confirmación y recordatorio por correo (recon: confianza alta). Faltaba en la matriz; salió en /replica-diff · Build: solo si el cliente deja su correo (opcional); cola con reintentos; la respuesta llega al correo del negocio"
 Aviso al dueño de una solicitud nueva,avisos,must,yes,yes,Por correo; WhatsApp automático solo con la API · Backend: correo por Resend con reintentos (outbox). La notificación del navegador no se hizo
 Horario semanal de trabajo y horas de inicio,disponibilidad,must,yes,yes,Equivale a los turnos (shifts) de OpenTable (S14) · Build: S14
 Capacidad máxima de taquizas y de invitados por día,disponibilidad,must,yes,yes,Equivale al pacing y al máximo de comensales (S14) · Build: S14; más equipos simultáneos

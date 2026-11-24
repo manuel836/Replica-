@@ -427,6 +427,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
               <TextField
                 label="Correo"
                 optional
+                hint="Si lo dejas, te mandamos ahí la confirmación y un recordatorio un día antes."
                 type="email"
                 autoComplete="email"
                 value={form.email}

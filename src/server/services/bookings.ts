@@ -6,6 +6,7 @@ import { CONFLICT_MESSAGE } from "@/server/domain/availability";
 import { priceFor } from "@/server/domain/pricing";
 import { addDaysLocal, formatDateLong, localTime, todayLocal } from "@/server/domain/time";
 import { AppError } from "@/server/errors";
+import { notifyCustomer } from "@/server/customer-email";
 import { notifyOwner } from "@/server/notify";
 import { paymentProvider } from "@/server/payments";
 import { manageTokenHash } from "@/server/tokens";
@@ -194,6 +195,9 @@ export async function createBooking(input: CreateInput, opts: { returnUrlFor: (b
       { label: "Revisar la solicitud", path: `/admin/t/${booking.id}` },
     );
   }
+  // Con pago en línea el correo sale cuando se aprueba el pago, no antes.
+  if (booking.status === "confirmed") await notifyCustomer(booking.id, "confirmed");
+  else if (booking.status === "requested" && input.source === "web") await notifyCustomer(booking.id, "received");
   return { booking, checkoutUrl };
 }
 
@@ -301,7 +305,7 @@ export async function applyProviderPayment(p: {
   await event(booking, "payment", "system", { status: p.status, amountCents: payment.amountCents });
   if (p.status !== "approved") return booking;
 
-  return db.withDayLock(business.id, [booking.eventDate], async () => {
+  const result = await db.withDayLock(business.id, [booking.eventDate], async () => {
     const fresh = (await db.getBooking(business.id, booking.id))!;
     if (p.amountCents < fresh.depositCents) {
       await notifyOwner(`Pago incompleto en ${fresh.code}`, `Llegó un pago menor al anticipo. Revisa la taquiza.`, { label: "Ver taquiza", path: `/admin/t/${fresh.id}` });
@@ -330,6 +334,8 @@ export async function applyProviderPayment(p: {
     await event(confirmed, "accepted", "system", { reason: "deposit_paid" });
     return confirmed;
   });
+  if (result.status === "confirmed" && booking.status !== "confirmed") await notifyCustomer(result.id, "confirmed");
+  return result;
 }
 
 async function refundOnlineDeposit(booking: Booking, actor: BookingEvent["actor"]): Promise<number> {
@@ -366,7 +372,7 @@ export async function acceptBooking(id: string, opts: { force?: boolean } = {}):
   if (!booking) throw new AppError("No encontramos esa taquiza.", "not_found");
   assertStatus(booking, ["requested", "awaiting_payment"], "aceptar");
 
-  return db.withDayLock(business.id, [booking.eventDate], async () => {
+  const accepted = await db.withDayLock(business.id, [booking.eventDate], async () => {
     const cap = await checkCapacity({
       date: booking.eventDate,
       time: localTime(booking.startAt, business.timezone),
@@ -389,6 +395,8 @@ export async function acceptBooking(id: string, opts: { force?: boolean } = {}):
     await event(updated, "accepted", "business", { needsDeposit });
     return updated;
   });
+  await notifyCustomer(accepted.id, accepted.status === "confirmed" ? "confirmed" : "payment_link");
+  return accepted;
 }
 
 export async function declineBooking(id: string, reason: string): Promise<Booking> {
@@ -397,7 +405,7 @@ export async function declineBooking(id: string, reason: string): Promise<Bookin
   const booking = await db.getBooking(business.id, id);
   if (!booking) throw new AppError("No encontramos esa taquiza.", "not_found");
   assertStatus(booking, ["requested", "awaiting_payment", "proposed"], "rechazar");
-  await refundOnlineDeposit(booking, "business");
+  const refundedCents = await refundOnlineDeposit(booking, "business");
   const updated = await db.updateBooking(business.id, id, {
     status: "declined",
     cancelReason: reason || null,
@@ -406,6 +414,7 @@ export async function declineBooking(id: string, reason: string): Promise<Bookin
     needsAttention: false,
   });
   await event(updated, "declined", "business", { reason });
+  await notifyCustomer(updated.id, "declined", { reason, refundedCents });
   return updated;
 }
 
@@ -415,7 +424,7 @@ export async function proposeNewTime(id: string, date: string, time: string): Pr
   const booking = await db.getBooking(business.id, id);
   if (!booking) throw new AppError("No encontramos esa taquiza.", "not_found");
   assertStatus(booking, ["requested", "awaiting_payment", "proposed"], "reagendar");
-  return db.withDayLock(business.id, [date], async () => {
+  const proposed = await db.withDayLock(business.id, [date], async () => {
     const cap = await checkCapacity({ date, time, guests: booking.guests, excludeBookingId: booking.id });
     if (cap.conflict && cap.conflict !== "too_soon") throw new AppError(CONFLICT_MESSAGE[cap.conflict], cap.conflict);
     const updated = await db.updateBooking(business.id, id, {
@@ -429,6 +438,8 @@ export async function proposeNewTime(id: string, date: string, time: string): Pr
     await event(updated, "proposed", "business", { date, time });
     return updated;
   });
+  await notifyCustomer(proposed.id, "proposed");
+  return proposed;
 }
 
 export async function completeBooking(id: string): Promise<Booking> {
@@ -439,6 +450,7 @@ export async function completeBooking(id: string): Promise<Booking> {
   assertStatus(booking, ["confirmed"], "marcar como completada");
   const updated = await db.updateBooking(business.id, id, { status: "completed", completedAt: new Date() });
   await event(updated, "completed", "business");
+  await notifyCustomer(updated.id, "review_request");
   return updated;
 }
 
@@ -467,6 +479,7 @@ export async function cancelByBusiness(id: string, reason: string): Promise<{ bo
     holdExpiresAt: null,
   });
   await event(updated, "cancelled", "business", { reason, refundedCents });
+  await notifyCustomer(updated.id, "cancelled", { by: "business", reason, refundedCents });
   return { booking: updated, refundedCents };
 }
 
@@ -537,6 +550,7 @@ export async function cancelByCustomer(booking: Booking, reason: string): Promis
   });
   await event(updated, "cancelled", "customer", { reason, refundedCents });
   await notifyOwner(`${booking.code} cancelada por el cliente`, reason || "Sin motivo.");
+  await notifyCustomer(updated.id, "cancelled", { by: "customer", refundedCents });
   return { booking: updated, refundedCents };
 }
 
@@ -567,7 +581,7 @@ export async function respondToProposal(booking: Booking, accept: boolean): Prom
   if (booking.proposalExpiresAt && booking.proposalExpiresAt < new Date())
     throw new AppError("La propuesta ya venció. Escríbenos para buscar otra fecha.", "expired");
   const date = booking.proposedEventDate;
-  return db.withDayLock(business.id, [date], async () => {
+  const accepted = await db.withDayLock(business.id, [date], async () => {
     const cap = await checkCapacity({
       date,
       time: localTime(booking.proposedStartAt!, business.timezone),
@@ -593,6 +607,8 @@ export async function respondToProposal(booking: Booking, accept: boolean): Prom
     await notifyOwner(`${booking.code}: el cliente aceptó la nueva fecha`, formatDateLong(date));
     return updated;
   });
+  await notifyCustomer(accepted.id, accepted.status === "confirmed" ? "confirmed" : "payment_link");
+  return accepted;
 }
 
 export async function rescheduleByCustomer(
@@ -607,7 +623,7 @@ export async function rescheduleByCustomer(
   if (pkg?.maxGuests && change.guests > pkg.maxGuests)
     throw new AppError(`Tu paquete es para máximo ${pkg.maxGuests} invitados.`, "guests", "guests");
 
-  return db.withDayLock(business.id, [booking.eventDate, change.date], async () => {
+  const result = await db.withDayLock(business.id, [booking.eventDate, change.date], async () => {
     const cap = await checkCapacity({ ...change, excludeBookingId: booking.id });
     if (cap.conflict) throw new AppError(CONFLICT_MESSAGE[cap.conflict], cap.conflict);
     const subtotal = booking.pricePerGuestCents * change.guests;
@@ -629,6 +645,8 @@ export async function rescheduleByCustomer(
     await notifyOwner(`${booking.code} cambió de fecha`, `${formatDateLong(change.date)} ${change.time}, ${change.guests} invitados`);
     return { booking: updated, differenceCents: total - booking.totalCents };
   });
+  await notifyCustomer(result.booking.id, "changed");
+  return result;
 }
 
 export async function submitReview(booking: Booking, rating: number, comment: string): Promise<void> {
@@ -668,8 +686,10 @@ export async function dailyHousekeeping(): Promise<{ expired: number; tomorrow: 
       expired++;
     }
   }
-  const tomorrow = (await db.listBookings(business.id, { statuses: ["confirmed"], from: addDaysLocal(today, 1), to: addDaysLocal(today, 1) }))
-    .length;
+  const due = await db.listBookings(business.id, { statuses: ["confirmed"], from: addDaysLocal(today, 1), to: addDaysLocal(today, 1) });
+  // Recordatorio por correo a quien dejó su correo (una sola vez aunque el job corra dos veces).
+  for (const b of due) await notifyCustomer(b.id, "reminder");
+  const tomorrow = due.length;
   const pending = (await db.listBookings(business.id, { statuses: ["requested"] })).length;
   await notifyOwner(`Resumen del día`, `Mañana: ${tomorrow} taquizas. Solicitudes sin responder: ${pending}.`);
   return { expired, tomorrow, pending };

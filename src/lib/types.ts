@@ -209,7 +209,7 @@ export interface Message {
   businessId: string;
   bookingId: string;
   channel: "whatsapp" | "email";
-  template: TemplateKey | "new_request_owner";
+  template: TemplateKey | "new_request_owner" | "changed";
   mode: "link" | "api";
   status: "prepared" | "sent" | "delivered" | "failed";
   recipient: string;

@@ -14,6 +14,8 @@ export interface Email {
   subject: string;
   html: string;
   text: string;
+  /** A dónde llega la respuesta (el correo del negocio en los correos al cliente). */
+  replyTo?: string;
 }
 
 const MAX_ATTEMPTS = 5;
@@ -38,7 +40,14 @@ async function deliver(email: Email, idempotencyKey: string): Promise<void> {
       "Content-Type": "application/json",
       "Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [email.to], subject: email.subject, html: email.html, text: email.text }),
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM,
+      to: [email.to],
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      ...(email.replyTo ? { reply_to: email.replyTo } : {}),
+    }),
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`Resend respondió ${res.status}: ${(await res.text()).slice(0, 200)}`);

@@ -1,8 +1,9 @@
 import { OWNER_STATE, a11y, bookTaquiza, bookingIdByCode, expect, mock, test } from "./helpers";
 
 test.describe("F05 el cliente cambia o cancela", () => {
-  test("F05-H1 cambia la fecha y los invitados", async ({ page }) => {
-    const { manageUrl } = await bookTaquiza(page, { monthsAhead: 1, dayIndex: 14 });
+  test("F05-H1 cambia la fecha y los invitados (y le llega el correo del cambio)", async ({ page }) => {
+    const email = `cambio${Date.now()}@correo.test`;
+    const { manageUrl } = await bookTaquiza(page, { monthsAhead: 1, dayIndex: 14, email });
     await page.goto(manageUrl);
     await page.getByRole("link", { name: "Cambiar fecha o invitados" }).click();
     await page.waitForURL(/\/cambiar/);
@@ -18,6 +19,8 @@ test.describe("F05 el cliente cambia o cancela", () => {
     await page.waitForURL((u) => !u.pathname.endsWith("/cambiar"));
     await expect(page.getByText("45 invitados")).toBeVisible();
     await expect(page.getByText("Cambiaste la fecha o los invitados")).toBeVisible();
+    await expect.poll(async () => (await mock.emails(email)).map((e) => e.subject).join()).toMatch(/Guardamos el cambio/);
+    expect((await mock.emails(email)).find((e) => /Guardamos el cambio/.test(e.subject))!.text).toContain("Invitados: 45");
   });
 
   test("F05-H2 cancela con anticipo pagado dentro del plazo: se reembolsa en Mercado Pago", async ({ page }) => {

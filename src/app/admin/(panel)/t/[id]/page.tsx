@@ -7,6 +7,7 @@ import { PriceSummary } from "@/components/ui/PriceSummary";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatMXN } from "@/lib/format";
 import type { BookingEvent, Payment } from "@/lib/types";
+import { EMAIL_LABELS } from "@/server/customer-email";
 import { TEMPLATE_LABELS } from "@/server/domain/messages";
 import { formatDateLong, formatStamp, localTime } from "@/server/domain/time";
 import { bookingDetail, suggestedTemplate } from "@/server/services/views";
@@ -249,7 +250,13 @@ export default async function BookingDetailPage({
             <Timeline
               items={events.map((e) => ({
                 id: e.id,
-                title: EVENT[e.type] + (e.type === "message" && typeof e.data.template === "string" ? `: ${TEMPLATE_LABELS[e.data.template as keyof typeof TEMPLATE_LABELS] ?? ""}` : ""),
+                title:
+                  e.type === "message" && e.data.channel === "email"
+                    ? `Correo al cliente: ${EMAIL_LABELS[e.data.template as keyof typeof EMAIL_LABELS] ?? "aviso"}`
+                    : EVENT[e.type] +
+                      (e.type === "message" && typeof e.data.template === "string"
+                        ? `: ${TEMPLATE_LABELS[e.data.template as keyof typeof TEMPLATE_LABELS] ?? ""}`
+                        : ""),
                 at: formatStamp(e.createdAt, tz),
                 actor: ACTOR[e.actor],
               }))}

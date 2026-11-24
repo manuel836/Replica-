@@ -73,7 +73,7 @@ export const mock = {
   async get<T = unknown>(path: string): Promise<T> {
     return (await (await fetch(MOCK + path)).json()) as T;
   },
-  emails: (to?: string) => mock.get<{ to: string; subject: string; text: string; from: string }[]>(`/__emails${to ? `?to=${encodeURIComponent(to)}` : ""}`),
+  emails: (to?: string) => mock.get<{ to: string; subject: string; text: string; from: string; replyTo: string | null }[]>(`/__emails${to ? `?to=${encodeURIComponent(to)}` : ""}`),
   lastLink: async (to: string) => (await mock.get<{ link: string | null }>(`/__last-link?to=${encodeURIComponent(to)}`)).link,
   state: () => mock.get<MockState>("/__state"),
   failEmail: (on: boolean) => mock.get(`/__fail-email?on=${on ? 1 : 0}`),
@@ -118,6 +118,8 @@ export interface BookingOpts {
   phone?: string;
   address?: string;
   notes?: string;
+  /** Correo opcional del cliente (para los correos de confirmación y recordatorio). */
+  email?: string;
   payNow?: boolean;
 }
 
@@ -150,6 +152,7 @@ export async function fillDetails(page: Page, o: BookingOpts = {}) {
   await page.getByLabel("Calle y número").fill(o.address ?? "Av. de Pruebas 123");
   await page.getByLabel(/^Colonia/).fill("Centro");
   if (o.notes) await page.getByLabel(/^Notas/).fill(o.notes);
+  if (o.email) await page.getByLabel(/^Correo/).fill(o.email);
 }
 
 /** Agenda de punta a punta. Con payNow aprueba el pago en la imitación de Mercado Pago. */

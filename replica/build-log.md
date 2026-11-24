@@ -58,3 +58,10 @@ consola y el desborde horizontal. Resultado final: 0 errores de consola, 0 viola
 - Los mensajes de WhatsApp del panel salen por `/admin/t/{id}/whatsapp`: un enlace normal que
   registra el mensaje y redirige a `wa.me`. No se usa `window.open`, que los celulares bloquean.
 - Límite contra spam: 3 solicitudes por WhatsApp por hora (las pruebas repetidas lo activaron).
+
+## Después de `/replica-diff` (2026-11-24)
+
+| qué | estado | notas |
+| --- | --- | --- |
+| S11 agenda por semana y por mes | done | Era la única función obligatoria pendiente. Pruebas `e2e/s11-calendario.spec.ts` |
+| Correos al cliente | done | Solo si deja su correo. Salen al recibir la solicitud, al confirmarla, si falta el anticipo, al rechazarla, al proponer otra fecha, al cambiarla, al cancelarla, el día anterior (job diario, una sola vez) y para pedir reseña. Migración `0004_customer_emails.sql`. Pruebas `e2e/correos-cliente.spec.ts` y F05-H1 |

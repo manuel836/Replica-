@@ -97,7 +97,7 @@ createServer(async (req, res) => {
       if (!auth.startsWith("Bearer re_")) return json(res, 401, { message: "invalid key" });
       const body = JSON.parse(await readBody(req));
       if (state.failEmail) return json(res, 500, { message: "simulated outage" });
-      state.emails.push({ to: body.to.join(","), subject: body.subject, text: body.text, from: body.from });
+      state.emails.push({ to: body.to.join(","), subject: body.subject, text: body.text, from: body.from, replyTo: body.reply_to ?? null });
       return json(res, 200, { id: randomUUID() });
     }
     res.writeHead(404);
