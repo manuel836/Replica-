@@ -25,7 +25,7 @@ async function context(from: string, to: string) {
 }
 
 /** Estado de cada día de un mes "yyyy-MM" para `guests` invitados. */
-export async function monthStates(month: string, guests: number): Promise<Record<string, DayState>> {
+export async function monthStates(month: string, guests: number, excludeBookingId?: string): Promise<Record<string, DayState>> {
   const first = `${month}-01`;
   const last = addDaysLocal(`${addDaysLocal(first, 32).slice(0, 7)}-01`, -1);
   const { business, ruleFor, blockedSet, bookings } = await context(first, last);
@@ -38,7 +38,7 @@ export async function monthStates(month: string, guests: number): Promise<Record
       blocked: blockedSet.has(d),
       date: d,
       guests,
-      loads: loadsForDate(bookings, d, now),
+      loads: loadsForDate(bookings, d, now, excludeBookingId),
       now,
     });
   }

@@ -6,7 +6,7 @@ import { baseUrl, managePath } from "@/server/context";
 import { store } from "@/server/data";
 import { AppError, run } from "@/server/errors";
 import * as bookings from "@/server/services/bookings";
-import { slotsFor } from "@/server/services/availability";
+import { monthStates, slotsFor } from "@/server/services/availability";
 import { verifyManageToken } from "@/server/tokens";
 import { bookingForm, dateStr, fieldErrors, timeStr } from "@/server/validation";
 
@@ -72,6 +72,15 @@ export async function horariosDelDia(date: string, guests: number, code?: string
   let exclude: string | undefined;
   if (code && token) exclude = (await bookingFromLink(code, token)).id;
   return slotsFor(d.data, g.data, exclude);
+}
+
+/** Calendario para cambiar una taquiza: no cuenta la propia taquiza como ocupada. */
+export async function diasDelMes(month: string, guests: number, code: string, token: string) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return {};
+  const g = z.coerce.number().int().min(1).max(2000).safeParse(guests);
+  if (!g.success) return {};
+  const booking = await bookingFromLink(code, token);
+  return monthStates(month, g.data, booking.id);
 }
 
 export async function pagarAnticipo(code: string, token: string) {
