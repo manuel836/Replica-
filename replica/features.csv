@@ -1,5 +1,5 @@
 feature,area,priority,original,clone,notes
-"Página pública del negocio con fotos, descripción y botón Agendar",página pública,must,yes,yes,Equivale al perfil de restaurante de OpenTable (S01) · Build: S01. Fotos pendientes del dueño (se muestran marcadores)
+"Página pública del negocio con fotos, descripción y botón Agendar",página pública,must,yes,yes,Equivale al perfil de restaurante de OpenTable (S01) · S01; fotos subidas desde Ajustes
 Lista de paquetes con precio por persona y mínimo de invitados,paquetes,must,yes,yes,Equivale al menú y a Experiences de OpenTable (S02) · Build: S01 y S02
 Elegir número de invitados,agendar,must,yes,yes,Equivale al selector de personas de OpenTable (S01 y S03) · Build: S01 y S03
 Calendario con días disponibles / pocos lugares / llenos / bloqueados,agendar,must,yes,yes,S03 · Build: S03; con aviso y botón si el mes ya no tiene fechas
@@ -10,7 +10,7 @@ Revisar que la dirección esté dentro de la zona de cobertura,agendar,should,no
 Tipo de evento y notas (alergias / peticiones),agendar,must,yes,yes,Equivale a la ocasión y las peticiones especiales de OpenTable (S04) · Build: S04
 Elegir complementos (aguas / tortillas a mano / salsas extra),agendar,could,no,no,La lista exacta la confirma D' Garden Tacos · Build: Tabla y precio preparados (addons); falta la pantalla
 Resumen con total estimado antes de confirmar,agendar,must,yes,yes,S05 · Build: S05
-Pagar anticipo en línea con tarjeta,pagos,must,yes,partial,Equivale a los depósitos y prepagos de OpenTable. Mercado Pago o Stripe se decide en /replica-architect (S05) · Build: Flujo completo con pago SIMULADO (/dev/checkout); Mercado Pago real en /replica-backend
+Pagar anticipo en línea con tarjeta,pagos,must,yes,yes,Equivale a los depósitos y prepagos de OpenTable. Mercado Pago o Stripe se decide en /replica-architect (S05) · Backend: Mercado Pago Checkout Pro + webhook firmado; probado contra imitación de la API; falta prueba con credenciales TEST- del dueño
 Agendar sin pago en línea (pagar después),pagos,must,yes,yes,La taquiza queda pendiente hasta que el negocio confirme (S05) · Build: S05
 Pago en OXXO o transferencia SPEI desde el sitio,pagos,could,no,no,Depende del proveedor de pagos elegido · Build: Excluido del MVP: tarda más que el apartado de 30 min
 Pantalla de confirmación con código y estado,agendar,must,yes,yes,S06 · Build: S06
@@ -18,7 +18,7 @@ Botón para mandar la solicitud al negocio por WhatsApp,avisos,must,no,yes,Enlac
 Agregar el evento al calendario del cliente (.ics / Google),agendar,should,yes,yes,S06 · Build: S06/S07 descarga .ics
 Ver mi taquiza desde un enlace privado sin cuenta,mi taquiza,must,yes,yes,"Equivale a gestionar la reservación en OpenTable (S07) · Build: S07; token derivado con HMAC, regenerable"
 Cambiar fecha / hora / invitados,mi taquiza,should,yes,yes,Vuelve a revisar disponibilidad (S08) · Build: S08; no se cuenta a sí misma al revisar lugar
-Cancelar mostrando la política de reembolso,mi taquiza,must,yes,yes,S07 · Build: S07; el reembolso en línea es simulado hasta /replica-backend
+Cancelar mostrando la política de reembolso,mi taquiza,must,yes,yes,S07 · S07; reembolso real en Mercado Pago dentro del plazo
 Recordatorio por WhatsApp antes del evento,avisos,should,yes,partial,En el MVP sale como lista de pendientes con botón wa.me; automático solo con la API de WhatsApp Business · Build: S11 'Recordatorios de mañana' con botón wa.me; sin envío automático
 Avisos automáticos por WhatsApp (API de WhatsApp Business),avisos,could,yes,no,Requiere cuenta de Meta / plantillas aprobadas / costo por conversación. OpenTable lo hace por SMS y correo · Build: Requiere cuenta de Meta; después del MVP
 Página de políticas y preguntas frecuentes,página pública,should,yes,yes,"S09 · Build: S09; aviso de privacidad provisional, pendiente de revisión legal"
@@ -26,7 +26,7 @@ Dejar reseña después del evento,reseñas,could,yes,yes,Solo clientes con event
 Mostrar reseñas en la página pública,reseñas,could,yes,yes,"S01 · Build: S01, solo las que publica el dueño"
 Diseño responsivo (celular primero),general,must,yes,yes,Build: Probado a 390 y 1440 px sin desborde horizontal
 Sitio en español (es-MX) con precios en MXN,general,must,yes,yes,
-Inicio de sesión del dueño,admin,must,yes,partial,S10 · Build: Enlace mágico firmado; en desarrollo se muestra en pantalla. Envío por correo (Supabase Auth) en /replica-backend
+Inicio de sesión del dueño,admin,must,yes,yes,"S10 · Backend: enlace mágico de un solo uso por correo (Resend), sesiones revocables"
 Agenda por día / semana / mes con todas las taquizas,admin agenda,must,yes,partial,Equivale al libro de reservaciones de OpenTable (S11) · Build: S11 lista agrupada por día con pestañas; falta la vista de calendario semana/mes
 Filtrar por estado (pendientes / confirmadas / canceladas / completadas),admin agenda,must,yes,yes,S11 · Build: Pestañas Por responder / Próximas / Pasadas / Canceladas
 Ver el detalle de una taquiza,admin agenda,must,yes,yes,S12 · Build: S12
@@ -34,17 +34,17 @@ Aceptar o rechazar una solicitud,admin agenda,must,yes,yes,Equivale a las solici
 Proponer otra fecha al cliente,admin agenda,should,yes,yes,S12 · Build: S12 y respuesta del cliente en S07
 Mensaje de WhatsApp ya escrito al cliente desde el detalle,avisos,must,no,yes,wa.me con plantilla según el estado (S12) · Build: S12; queda registrado en el historial
 Marcar anticipo o saldo como pagado (efectivo / transferencia),pagos,must,no,yes,S12 · Build: S12
-Reembolsar un anticipo pagado en línea,pagos,should,yes,partial,S12 por la API del proveedor de pagos · Build: Automático al rechazar o cancelar (simulado); falta botón de reembolso parcial
+Reembolsar un anticipo pagado en línea,pagos,should,yes,partial,S12 por la API del proveedor de pagos · Backend: reembolso real en Mercado Pago al rechazar o cancelar (idempotente); falta botón de reembolso parcial
 Marcar la taquiza como completada o no realizada,admin agenda,should,yes,yes,S12 · Build: S12
 Notas internas en la taquiza,admin agenda,should,yes,yes,S12 · Build: S12
 Registrar a mano una taquiza que llegó por teléfono o Facebook,admin agenda,must,yes,yes,"Equivale a ""agregar reservación"" del panel del restaurante (S13) · Build: S13; con opción de forzar día lleno"
-Aviso al dueño de una solicitud nueva,avisos,must,yes,partial,En el MVP por correo y notificación del navegador; WhatsApp automático solo con la API · Build: Se escribe en la consola del servidor; correo con Resend en /replica-backend
+Aviso al dueño de una solicitud nueva,avisos,must,yes,yes,En el MVP por correo y notificación del navegador; WhatsApp automático solo con la API · Backend: correo por Resend con reintentos (outbox)
 Horario semanal de trabajo y horas de inicio,disponibilidad,must,yes,yes,Equivale a los turnos (shifts) de OpenTable (S14) · Build: S14
 Capacidad máxima de taquizas y de invitados por día,disponibilidad,must,yes,yes,Equivale al pacing y al máximo de comensales (S14) · Build: S14; más equipos simultáneos
 Anticipación mínima y máxima para agendar,disponibilidad,must,yes,yes,S14 · Build: S14
 Bloquear fechas (vacaciones / días festivos),disponibilidad,must,yes,yes,S14 · Build: S14; avisa si el día ya tiene taquizas
 Tiempo de traslado y montaje entre eventos,disponibilidad,should,no,yes,S14 · Build: S14
-Crear y editar paquetes y precios,paquetes,must,yes,yes,S15 · Build: S15; subir foto queda para cuando haya almacenamiento (/replica-backend)
+Crear y editar paquetes y precios,paquetes,must,yes,yes,S15 · S15; con foto (Supabase Storage)
 Zonas de cobertura con cargo por traslado,cobertura,should,no,yes,S16 · Build: S16
 "Configurar anticipo (porcentaje o monto fijo, obligatorio u opcional)",ajustes,must,yes,yes,S17 · Build: S17
 Confirmación automática o manual,ajustes,should,yes,yes,S17 · Build: S17

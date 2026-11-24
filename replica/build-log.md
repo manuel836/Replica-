@@ -3,9 +3,11 @@
 Paridad con OpenTable (`parity.py`): **89.7 / 100**, con 25 de 29 must-haves.
 Las 19 pantallas están construidas.
 
-Capa de datos: **en memoria** (`src/server/data/fake.ts`), detrás de la interfaz `DataStore` que
-implementará Postgres. Pagos: **simulados** (`/dev/checkout`). Correos: a la consola.
-Todo eso cambia en `/replica-backend` sin tocar pantallas.
+**Actualización tras `/replica-backend`:** paridad **93.8 / 100**, con 28 de 29 must-haves.
+Ahora hay Postgres real, Mercado Pago, correo por Resend, entrada por enlace de un solo uso y
+fotos. Las mismas pantallas pasan todas las pruebas sobre Postgres. Detalle en
+`replica/backend.md`. Sin `DATABASE_URL`, en desarrollo sigue la capa en memoria; sin
+`MP_ACCESS_TOKEN`, el pago simulado.
 
 Cómo se probó cada pantalla: Playwright de punta a punta en un navegador real y axe-core
 (WCAG 2.0, 2.1 y 2.2 A/AA, más buenas prácticas) a 390 px y a 1440 px. También se revisaron la
@@ -41,7 +43,7 @@ consola y el desborde horizontal. Resultado final: 0 errores de consola, 0 viola
    reembolsos al cancelar), pero con un proveedor simulado. Falta Mercado Pago Checkout Pro, su
    webhook firmado y las llaves del negocio. Es parte de `/replica-backend`.
 2. **Base de datos.** Todo vive en memoria y se pierde al reiniciar el servidor. El esquema de
-   Postgres ya está probado (`replica/schema.sql`); falta la implementación de `DataStore` con
+   Postgres ya está probado (`db/migrations/0001_schema.sql`); falta la implementación de `DataStore` con
    Drizzle.
 3. **Correos.** El aviso de solicitud nueva y el resumen diario hoy se escriben en la consola.
 4. **Vista de calendario del panel.** El dueño ve una lista por día, no una cuadrícula de semana

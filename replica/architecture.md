@@ -1,6 +1,13 @@
 # Arquitectura: taquizas de D' Garden Tacos (reconstrucción del ciclo central de OpenTable)
 
-Lee: `replica/recon.md` y `replica/features.csv`. Esquema: `replica/schema.sql` (es la migración 0001).
+Lee: `replica/recon.md` y `replica/features.csv`. Esquema: `db/migrations/0001_schema.sql` (migración 0001; la 0002 agrega las tablas del backend).
+
+> **Cambios hechos en `/replica-backend`** (detalle en `replica/backend.md`):
+> - Sin Supabase Auth: el panel usa un enlace mágico propio de un solo uso, enviado por correo.
+> - postgres-js con SQL directo en lugar de Drizzle.
+> - El token del enlace del cliente se deriva con HMAC del id y una versión.
+>
+> Lo que sigue en este documento sobre Supabase Auth y Drizzle quedó como referencia.
 Negocio: D' Garden Tacos, Lázaro Cárdenas, Michoacán. Zona horaria `America/Mexico_City`, sin horario de verano.
 Fecha: 2026-11-24
 
@@ -11,7 +18,7 @@ Fecha: 2026-11-24
 | web | Next.js (App Router) + TypeScript | Una sola base de código para el sitio público, el panel del dueño y los webhooks. Las páginas se arman en el servidor (rápidas en celular) y los formularios usan server actions. |
 | estilos | Tailwind CSS, con los tokens que produzca `/replica-design` | Rápido de construir y consistente, con cero CSS suelto. |
 | base de datos | Postgres en Supabase (una sola base) | Administrado y gratis para desarrollar. Auth y Storage vienen en el mismo proyecto. |
-| ORM | Drizzle (con `postgres-js`) | Cercano a SQL, ligero, con buenas transacciones. `schema.sql` es la migración 0001 y `drizzle-kit pull` genera los tipos. |
+| ORM | Drizzle (con `postgres-js`) | Cercano a SQL, ligero, con buenas transacciones. `db/migrations/0001_schema.sql` es la migración 0001. |
 | auth | Supabase Auth con enlace mágico, solo para el dueño y sus ayudantes | Sin contraseñas que olvidar. Los clientes **no** crean cuenta: gestionan su taquiza con un enlace privado (token). |
 | pagos | Mercado Pago Checkout Pro | Es el más conocido en México: tarjetas, saldo de Mercado Pago y meses sin intereses. Se puede abrir con una cuenta de persona física. Queda detrás de una interfaz `PaymentProvider` para cambiar a Stripe si algún día conviene. |
 | WhatsApp | MVP: enlaces `wa.me` con el mensaje ya escrito. Después: WhatsApp Cloud API de Meta | Los enlaces son gratis y no piden aprobación. La API envía sola los mensajes, pero requiere una cuenta de Meta verificada, plantillas aprobadas y paga por conversación. |
@@ -53,7 +60,7 @@ los precios vigentes al desplegar.
 
 ## Esquema
 
-Tablas: 15. El SQL completo está en [`schema.sql`](schema.sql). Se probó en Postgres 16:
+Tablas: 15 (+4 de soporte en la migración 0002). El SQL completo está en [`db/migrations/`](../db/migrations/). Se probó en Postgres 16:
 carga limpio y pasan 12 casos de capacidad y la prueba de carrera.
 
 | tabla | qué guarda | pantallas |
@@ -341,7 +348,7 @@ ve la solicitud, la acepta y abre WhatsApp con el mensaje listo.
 - Pantallas: S01 (básica), S03, S04, S05 (solo "pagar después"), S06, S10, S11 (lista
   simple), S12 (aceptar + WhatsApp).
 - Tablas: `businesses`, `admin_users`, `availability_rules`, `packages`, `customers`,
-  `bookings`, `booking_events`, `messages`. Se carga todo `schema.sql` y se siembran los
+  `bookings`, `booking_events`, `messages`. Se cargan las migraciones y se siembran los
   datos de ejemplo.
 - Rutas: `/`, `/agendar`, disponibilidad (mes y día), `crearTaquiza`, `/t/[codigo]`,
   `/admin/entrar`, `pedirEnlaceAcceso`, `/auth/callback`, `/admin`, `/admin/t/[id]`,
