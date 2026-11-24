@@ -26,11 +26,34 @@ Fecha: 2026-11-24
 | 7 | Google Play | https://play.google.com/store/apps/details?id=com.opentable&hl=es_MX | Contenido truncado; no aportó datos. |
 | 8 | Facebook de D' Garden Tacos | https://www.facebook.com/share/1DYvHoQZNW/ | Solo se leyó el título: "D' Garden Tacos \| Ciudad Lázaro Cárdenas". Lo demás requiere iniciar sesión. |
 | 9 | conocimiento general del producto público de OpenTable | (sin URL) | Flujos de reservación, estados, solicitudes de eventos privados, depósitos y turnos. Lo que viene de aquí está marcado con confianza **media** y debe verificarse a mano si importa. |
+| 10 | video de YouTube sobre D' Garden Tacos | https://www.youtube.com/watch?v=YfZ8a3UK41U | YouTube bloqueó la página (verificación antibots). Por oEmbed, el servicio público de YouTube, se obtuvo el título, "“DAME 4 CON TODO” Nueva Sección con D’Garden Tacos", y el canal, "PACKO RAMIREZ MICH-MEX". La miniatura se vio (ver abajo). No se pudo ver el video ni su descripción o transcripción. |
 
 **Capturas:** no se pudieron tomar (fuente 1 bloqueada). Si quieres usarlas para
 `/replica-design`, guarda capturas de OpenTable tomadas en tu celular en
 `replica/screens/` con el nombre de la pantalla (ej. `S03-calendario.png`). Sirven solo
 de referencia y nunca se publican.
+
+### Lo que sabemos de D' Garden Tacos
+
+De las fuentes 8 y 10. Lo que viene de la miniatura del video está marcado como *observado*,
+porque es una imagen y no un dato confirmado.
+
+- **Nombre y ciudad:** D' Garden Tacos, Lázaro Cárdenas, Michoacán (confirmado por el dueño).
+- **Aparece en medios locales:** una sección del canal de YouTube "PACKO RAMIREZ MICH-MEX"
+  ("“DAME 4 CON TODO” Nueva Sección con D’Garden Tacos").
+- *Observado:* **tacos a la plancha**. En una plancha grande hay carne picada (parece asada
+  o bistec), otra carne roja (parece chorizo o longaniza) y muchas cebollitas asadas. "Dame 4
+  con todo" sugiere orden por pieza, con cebolla y cilantro.
+- *Observado:* **equipo móvil**. La plancha va montada en un carrito negro con la marca, al
+  aire libre, bajo palapas. Encaja con llevar la taquiza al evento del cliente.
+- *Observado:* **equipo con uniforme**. Playeras negras con el logo y guantes negros.
+- *Observado:* **identidad visual**. Logo circular negro con "D' GARDEN" en arco y "TACOS"
+  grande, en letras crema y dorado. Sirve de base para `/replica-design`: es la marca propia
+  del negocio, no la de OpenTable.
+
+Qué cambia en el plan: nada estructural. Confirma que el modelo de taquiza a domicilio con
+la plancha móvil es el correcto. Los paquetes probablemente serán por persona con guisos de
+plancha (asada, chorizo…) y cebollitas. Hay que confirmarlo con los datos de la pregunta 1.
 
 ### Preguntas abiertas para D' Garden Tacos (las necesita /replica-architect)
 
