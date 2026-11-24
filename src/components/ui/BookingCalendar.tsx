@@ -24,6 +24,11 @@ interface BookingCalendarProps {
   startMonth?: Date;
   endMonth?: Date;
   loading?: boolean;
+  /**
+   * "Hoy" en la zona del negocio, calculado en el servidor. Sin esto, cada lado usaría su
+   * propio reloj y el servidor (UTC) y el navegador podrían no coincidir.
+   */
+  today?: Date;
 }
 
 function CalendarDayButton({ day, modifiers, className, ...props }: DayButtonProps) {
@@ -66,6 +71,7 @@ export function BookingCalendar({
   startMonth,
   endMonth,
   loading = false,
+  today,
 }: BookingCalendarProps) {
   const stateOf = (d: Date): DayState => days[key(d)] ?? "out";
   const is = (s: DayState) => (d: Date) => stateOf(d) === s;
@@ -75,6 +81,7 @@ export function BookingCalendar({
       <DayPicker
         mode="single"
         locale={es}
+        today={today}
         selected={selected}
         onSelect={onSelect}
         month={month}

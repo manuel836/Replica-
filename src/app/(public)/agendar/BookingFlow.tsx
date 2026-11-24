@@ -35,6 +35,8 @@ interface Props {
   packages: PackageInfo[];
   zones: { id: string; name: string; travelFeeCents: number }[];
   initialGuests: number;
+  /** Hoy en la zona del negocio ("yyyy-MM-dd"). */
+  today: string;
   firstMonth: string;
   lastMonth: string;
 }
@@ -53,7 +55,7 @@ function deposit(b: Props["business"], total: number) {
   return Math.min(total, Math.ceil((total * b.depositValue) / 100 / 100) * 100);
 }
 
-export function BookingFlow({ business, packages, zones, initialGuests, firstMonth, lastMonth }: Props) {
+export function BookingFlow({ business, packages, zones, initialGuests, today, firstMonth, lastMonth }: Props) {
   const searchParams = useSearchParams();
   const urlStep = Math.min(2, Math.max(0, (Number(searchParams.get("paso")) || 1) - 1));
   const [detailsOk, setDetailsOk] = useState(false);
@@ -314,6 +316,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, firstMon
                 ) : (
                   <BookingCalendar
                     days={days}
+                    today={toDate(today)}
                     loading={daysLoading}
                     month={month}
                     onMonthChange={setMonth}

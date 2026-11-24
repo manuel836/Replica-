@@ -62,6 +62,7 @@ export default async function ReschedulePage({
         pricePerGuestCents={booking.pricePerGuestCents}
         currentTotalCents={booking.totalCents}
         fixedCents={booking.travelFeeCents + booking.addonsCents}
+        today={today}
         firstMonth={addDaysLocal(today, business.minNoticeDays).slice(0, 7)}
         lastMonth={addDaysLocal(today, business.maxAdvanceDays).slice(0, 7)}
       />

@@ -42,6 +42,7 @@ export default async function AgendarPage({ searchParams }: { searchParams: Prom
         }))}
         zones={zones.filter((z) => z.isActive).map((z) => ({ id: z.id, name: z.name, travelFeeCents: z.travelFeeCents }))}
         initialGuests={initialGuests}
+        today={today}
         firstMonth={addDaysLocal(today, business.minNoticeDays).slice(0, 7)}
         lastMonth={addDaysLocal(today, business.maxAdvanceDays).slice(0, 7)}
       />

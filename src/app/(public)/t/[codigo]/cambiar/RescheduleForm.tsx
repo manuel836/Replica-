@@ -24,6 +24,7 @@ interface Props {
   pricePerGuestCents: number;
   currentTotalCents: number;
   fixedCents: number;
+  today: string;
   firstMonth: string;
   lastMonth: string;
 }
@@ -97,6 +98,7 @@ export function RescheduleForm(p: Props) {
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         <BookingCalendar
           days={days}
+          today={toDate(p.today)}
           loading={loading}
           month={month}
           onMonthChange={setMonth}
