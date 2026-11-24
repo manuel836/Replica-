@@ -636,7 +636,7 @@ export async function submitReview(booking: Booking, rating: number, comment: st
   if (booking.status !== "completed") throw new AppError("Podrás dejar tu reseña después del evento.", "bad_status");
   if (await db.getReviewByBooking(booking.id)) throw new AppError("Ya nos dejaste tu reseña. ¡Gracias!", "duplicate");
   if (rating < 1 || rating > 5) throw new AppError("Elige de 1 a 5 estrellas.", "rating", "rating");
-  await db.addReview({ businessId: booking.businessId, bookingId: booking.id, rating, comment, isPublished: false });
+  await db.addReview({ businessId: booking.businessId, bookingId: booking.id, rating, comment, isPublished: false, reviewedAt: null });
 }
 
 // ---------------------------------------------------------------------------

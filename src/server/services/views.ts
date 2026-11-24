@@ -66,7 +66,7 @@ export async function agenda(tab: AgendaTab) {
     rows: await joinRows(business, bookings),
     counts: { pendientes: counts[0].length, proximas: counts[1].length },
     tomorrow: await joinRows(business, tomorrow),
-    unpublishedReviews: (await db.listReviews(business.id)).filter((r) => !r.isPublished),
+    unpublishedReviews: (await db.listReviews(business.id)).filter((r) => !r.reviewedAt),
   };
 }
 

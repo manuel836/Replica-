@@ -305,7 +305,7 @@ export const postgresStore: DataStore = {
       ${opts?.publishedOnly ? q()`and is_published` : q()``} order by created_at desc limit 200`) as unknown as Review[];
   },
   async setReviewPublished(businessId, id, published) {
-    await q()`update reviews set is_published = ${published} where business_id = ${businessId} and id = ${id}`;
+    await q()`update reviews set is_published = ${published}, reviewed_at = now() where business_id = ${businessId} and id = ${id}`;
   },
 
   async findAdminByEmail(email) {

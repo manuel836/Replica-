@@ -223,6 +223,8 @@ export interface Review {
   rating: number;
   comment: string;
   isPublished: boolean;
+  /** Cuándo la revisó el dueño (publicada o no). null = está en la cola. */
+  reviewedAt: Date | null;
   createdAt: Date;
 }
 

@@ -125,6 +125,7 @@ function seed(): Tables {
 
   const admins: AdminUser[] = [
     { id: "00000000-0000-4000-8000-0000000000f1", businessId: BUSINESS_ID, email: "dueno@dgarden.test", role: "owner", sessionVersion: 1 },
+    { id: "00000000-0000-4000-8000-0000000000f2", businessId: BUSINESS_ID, email: "ayudante@dgarden.test", role: "helper", sessionVersion: 1 },
   ];
 
   const now = new Date();
@@ -457,7 +458,7 @@ export const fakeStore: DataStore = {
   },
   async setReviewPublished(businessId, id, published) {
     const row = db().reviews.find((r) => r.businessId === businessId && r.id === id);
-    if (row) row.isPublished = published;
+    if (row) Object.assign(row, { isPublished: published, reviewedAt: new Date() });
   },
 
   async findAdminByEmail(email) {
