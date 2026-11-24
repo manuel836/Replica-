@@ -21,9 +21,12 @@ interface PackageCardProps {
   variant?: "compact" | "full";
   /** Si se pasa, la tarjeta es un radio para elegir paquete en el formulario. */
   selectable?: { name: string; checked: boolean; onChange: () => void };
+  /** Nivel del título según la página (h2 si la tarjeta va directo bajo el h1). */
+  headingLevel?: "h2" | "h3";
 }
 
-export function PackageCard({ pkg, variant = "full", selectable }: PackageCardProps) {
+export function PackageCard({ pkg, variant = "full", selectable, headingLevel = "h3" }: PackageCardProps) {
+  const Heading = headingLevel;
   const inactive = pkg.isActive === false;
   const guests = pkg.maxGuests ? `${pkg.minGuests} a ${pkg.maxGuests} invitados` : `Desde ${pkg.minGuests} invitados`;
 
@@ -41,7 +44,7 @@ export function PackageCard({ pkg, variant = "full", selectable }: PackageCardPr
       )}
       <div className="flex flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-display text-lg text-text">{pkg.name}</h3>
+          <Heading className="font-display text-lg text-text">{pkg.name}</Heading>
           {selectable && (
             <span
               aria-hidden
