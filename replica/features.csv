@@ -38,7 +38,7 @@ Reembolsar un anticipo pagado en línea,pagos,should,yes,partial,S12 por la API 
 Marcar la taquiza como completada o no realizada,admin agenda,should,yes,yes,S12 · Build: S12
 Notas internas en la taquiza,admin agenda,should,yes,yes,S12 · Build: S12
 Registrar a mano una taquiza que llegó por teléfono o Facebook,admin agenda,must,yes,yes,"Equivale a ""agregar reservación"" del panel del restaurante (S13) · Build: S13; con opción de forzar día lleno"
-Aviso al dueño de una solicitud nueva,avisos,must,yes,yes,En el MVP por correo y notificación del navegador; WhatsApp automático solo con la API · Backend: correo por Resend con reintentos (outbox)
+Aviso al dueño de una solicitud nueva,avisos,must,yes,yes,Por correo; WhatsApp automático solo con la API · Backend: correo por Resend con reintentos (outbox). La notificación del navegador no se hizo
 Horario semanal de trabajo y horas de inicio,disponibilidad,must,yes,yes,Equivale a los turnos (shifts) de OpenTable (S14) · Build: S14
 Capacidad máxima de taquizas y de invitados por día,disponibilidad,must,yes,yes,Equivale al pacing y al máximo de comensales (S14) · Build: S14; más equipos simultáneos
 Anticipación mínima y máxima para agendar,disponibilidad,must,yes,yes,S14 · Build: S14
