@@ -9,3 +9,7 @@ next-env.d.ts
 npm-debug.log*
 .DS_Store
 .data/
+e2e/report/
+e2e/.auth/
+test-results/
+playwright-report/

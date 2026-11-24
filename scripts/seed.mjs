@@ -57,6 +57,7 @@ try {
       await tx`insert into admin_users (business_id, email, role) values (${b.id}, ${adminEmail}, 'owner')`;
 
       if (demo) {
+        await tx`insert into admin_users (business_id, email, role) values (${b.id}, 'ayudante@dgarden.test', 'helper')`;
         const pkgs = await tx`select id, price_per_guest_cents from packages where business_id = ${b.id} order by sort_order`;
         const [zone] = await tx`select id from service_zones where business_id = ${b.id} order by sort_order limit 1`;
         const plan = [
