@@ -28,10 +28,10 @@ type Result = { ok: true; data?: unknown } | { ok: false; error: string; code?: 
 function useAfter() {
   const router = useRouter();
   const [wa, setWa] = useState<{ url: string; label: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ text: string; code?: string } | null>(null);
   const handle = (r: Result, success: string, waLabel = "Avisar al cliente por WhatsApp") => {
     if (!r.ok) {
-      setError(r.error);
+      setError({ text: r.error, code: r.code });
       return false;
     }
     setError(null);
@@ -43,6 +43,9 @@ function useAfter() {
   };
   return { wa, error, handle, setError };
 }
+
+/** Conflictos de agenda que el dueño puede saltarse (él decide si le da tiempo). */
+const OVERRIDABLE = ["day_full", "guests_full", "time_taken", "blocked_date", "closed_day", "outside_hours", "too_far"];
 
 interface ActionsProps {
   id: string;
@@ -69,8 +72,8 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
     <section aria-label="Acciones" className="flex flex-col gap-3">
       {error && (
         <Alert tone="danger" title="No se pudo">
-          {error}
-          {(error.includes("lleno") || error.includes("ocupar") || error.includes("capacidad")) && pending && (
+          {error.text}
+          {OVERRIDABLE.includes(error.code ?? "") && (pending || needsAttention) && (
             <div className="mt-2">
               <Button
                 size="sm"

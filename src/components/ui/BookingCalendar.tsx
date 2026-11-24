@@ -110,7 +110,7 @@ export function BookingCalendar({
             ),
         }}
         classNames={{
-          root: cn("relative rounded-lg border border-border bg-surface p-3 shadow-card", loading && "opacity-60"),
+          root: cn("relative rounded-lg border border-border bg-surface p-3 shadow-card", loading && "pointer-events-none"),
           months: "flex flex-col",
           month: "flex flex-col gap-3",
           month_caption: "flex h-11 items-center px-1",
@@ -127,7 +127,10 @@ export function BookingCalendar({
           day: "p-0",
         }}
       />
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-text-muted" aria-label="Qué significa cada día">
+      <p role="status" className="mt-2 h-5 text-sm text-text-muted">
+        {loading ? "Cargando fechas…" : ""}
+      </p>
+      <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-2 text-sm text-text-muted" aria-label="Qué significa cada día">
         <li className="flex items-center gap-2">
           <span aria-hidden className="size-3 rounded-sm border border-border-input bg-surface" />
           Disponible
