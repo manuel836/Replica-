@@ -53,7 +53,7 @@ export default async function ManagePage({
   if (!d) {
     return (
       <div className="mx-auto w-full max-w-flow px-4 py-12">
-        <EmptyState icon={Link2Off} title="Este enlace no funciona" action={<ButtonLink href="/">Ir al inicio</ButtonLink>}>
+        <EmptyState as="h1" icon={Link2Off} title="Este enlace no funciona" action={<ButtonLink href="/">Ir al inicio</ButtonLink>}>
           Puede que esté incompleto o que lo hayamos cambiado. Pídenos el enlace actualizado por WhatsApp.
         </EmptyState>
       </div>

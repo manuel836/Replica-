@@ -21,7 +21,7 @@ export default async function ReviewPage({
   if (!d || !k) {
     return (
       <div className={wrap}>
-        <EmptyState icon={Link2Off} title="Este enlace no funciona" action={<ButtonLink href="/">Ir al inicio</ButtonLink>}>
+        <EmptyState as="h1" icon={Link2Off} title="Este enlace no funciona" action={<ButtonLink href="/">Ir al inicio</ButtonLink>}>
           Pídenos el enlace actualizado por WhatsApp.
         </EmptyState>
       </div>
@@ -30,7 +30,7 @@ export default async function ReviewPage({
   if (d.review) {
     return (
       <div className={wrap}>
-        <EmptyState icon={Heart} title="¡Gracias! Ya recibimos tu reseña">
+        <EmptyState as="h1" icon={Heart} title="¡Gracias! Ya recibimos tu reseña">
           Nos ayuda mucho a mejorar.
         </EmptyState>
       </div>
@@ -40,6 +40,7 @@ export default async function ReviewPage({
     return (
       <div className={wrap}>
         <EmptyState
+          as="h1"
           icon={CalendarClock}
           title="Todavía no es momento"
           action={<ButtonLink variant="secondary" href={`/t/${d.booking.code}?k=${encodeURIComponent(k)}`}>Ver mi taquiza</ButtonLink>}

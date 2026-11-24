@@ -51,18 +51,21 @@ export function EmptyState({
   title,
   children,
   action,
+  as: Heading = "h3",
 }: {
   icon: LucideIcon;
   title: string;
   children?: ReactNode;
   action?: ReactNode;
+  /** Nivel del título. "h1" cuando el mensaje es toda la página. */
+  as?: "h1" | "h2" | "h3";
 }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-input bg-surface px-6 py-10 text-center">
       <span className="flex size-12 items-center justify-center rounded-pill bg-surface-muted">
         <Icon aria-hidden className="size-6 text-text-muted" />
       </span>
-      <h3 className="font-display text-lg text-text">{title}</h3>
+      <Heading className="font-display text-lg text-text">{title}</Heading>
       {children && <p className="max-w-sm text-sm text-text-muted">{children}</p>}
       {action}
     </div>

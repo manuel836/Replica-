@@ -20,7 +20,7 @@ export default async function PackagesPage() {
         </p>
       </div>
       {packages.length === 0 ? (
-        <EmptyState icon={PackageIcon} title="Estamos preparando nuestros paquetes" action={<ButtonLink href="/">Volver al inicio</ButtonLink>}>
+        <EmptyState as="h2" icon={PackageIcon} title="Estamos preparando nuestros paquetes" action={<ButtonLink href="/">Volver al inicio</ButtonLink>}>
           Vuelve pronto.
         </EmptyState>
       ) : (

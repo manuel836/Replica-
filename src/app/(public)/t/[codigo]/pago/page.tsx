@@ -25,7 +25,7 @@ export default async function PaymentReturn({
   if (!d || !token) {
     return (
       <div className={wrap}>
-        <EmptyState icon={Clock} title="Estamos revisando tu pago">
+        <EmptyState as="h1" icon={Clock} title="Estamos revisando tu pago">
           Abre el enlace de tu taquiza que te mandamos para ver el estado. Si pagaste, se actualizará en unos minutos.
         </EmptyState>
       </div>
@@ -36,7 +36,7 @@ export default async function PaymentReturn({
   if (d.booking.status === "confirmed") {
     return (
       <div className={wrap}>
-        <EmptyState icon={CheckCircle2} title="¡Pago recibido! Tu taquiza está confirmada" action={<ButtonLink href={`${manage}&nuevo=1`}>Ver mi taquiza</ButtonLink>}>
+        <EmptyState as="h1" icon={CheckCircle2} title="¡Pago recibido! Tu taquiza está confirmada" action={<ButtonLink href={`${manage}&nuevo=1`}>Ver mi taquiza</ButtonLink>}>
           Guarda el enlace de tu taquiza para verla o cambiarla.
         </EmptyState>
       </div>
@@ -45,7 +45,7 @@ export default async function PaymentReturn({
   if (resultado === "rechazado" || status === "rejected") {
     return (
       <div className={wrap}>
-        <EmptyState icon={XCircle} title="El pago no pasó" action={<RetryPayment code={d.booking.code} token={token} manageHref={manage} />}>
+        <EmptyState as="h1" icon={XCircle} title="El pago no pasó" action={<RetryPayment code={d.booking.code} token={token} manageHref={manage} />}>
           No se hizo ningún cargo. Puedes intentar con otra tarjeta; tu fecha sigue apartada un rato.
         </EmptyState>
       </div>
@@ -53,7 +53,7 @@ export default async function PaymentReturn({
   }
   return (
     <div className={wrap}>
-      <EmptyState icon={Clock} title="Estamos confirmando tu pago" action={<ButtonLink href={manage}>Ver mi taquiza</ButtonLink>}>
+      <EmptyState as="h1" icon={Clock} title="Estamos confirmando tu pago" action={<ButtonLink href={manage}>Ver mi taquiza</ButtonLink>}>
         En cuanto el banco lo confirme, tu taquiza queda lista. Puede tardar unos minutos.
       </EmptyState>
     </div>

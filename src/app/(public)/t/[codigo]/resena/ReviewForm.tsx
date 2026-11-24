@@ -18,7 +18,7 @@ export function ReviewForm({ code, token }: { code: string; token: string }) {
 
   if (sent) {
     return (
-      <EmptyState icon={Heart} title="¡Gracias por tu reseña!">
+      <EmptyState as="h2" icon={Heart} title="¡Gracias por tu reseña!">
         La revisamos antes de publicarla.
       </EmptyState>
     );

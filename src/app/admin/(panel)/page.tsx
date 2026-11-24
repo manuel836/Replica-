@@ -97,7 +97,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
       </nav>
 
       {rows.length === 0 ? (
-        <EmptyState icon={CalendarX} title={EMPTY[tab].title} action={<ButtonLink size="sm" href="/admin/t/nueva">Registrar una taquiza</ButtonLink>}>
+        <EmptyState as="h2" icon={CalendarX} title={EMPTY[tab].title} action={<ButtonLink size="sm" href="/admin/t/nueva">Registrar una taquiza</ButtonLink>}>
           {EMPTY[tab].text}
         </EmptyState>
       ) : (

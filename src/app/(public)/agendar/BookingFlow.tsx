@@ -270,7 +270,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
 
   if (packages.length === 0) {
     return (
-      <EmptyState icon={CalendarDays} title="Por ahora no hay paquetes disponibles">
+      <EmptyState as="h2" icon={CalendarDays} title="Por ahora no hay paquetes disponibles">
         Estamos preparando nuestros paquetes. Vuelve pronto o escríbenos.
       </EmptyState>
     );

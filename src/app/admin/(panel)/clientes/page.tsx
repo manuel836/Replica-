@@ -43,7 +43,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         {rows.length === 0 ? (
-          <EmptyState icon={Users} title={q ? "Nadie con esa búsqueda" : "Todavía no hay clientes"}>
+          <EmptyState as="h2" icon={Users} title={q ? "Nadie con esa búsqueda" : "Todavía no hay clientes"}>
             {q ? "Prueba con otra parte del nombre o del número." : "Aparecerán cuando alguien agende."}
           </EmptyState>
         ) : (

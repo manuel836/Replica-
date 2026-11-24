@@ -21,7 +21,7 @@ export default async function ReschedulePage({
   if (!d || !k) {
     return (
       <div className={wrap}>
-        <EmptyState icon={Link2Off} title="Este enlace no funciona" action={<ButtonLink href="/">Ir al inicio</ButtonLink>}>
+        <EmptyState as="h1" icon={Link2Off} title="Este enlace no funciona" action={<ButtonLink href="/">Ir al inicio</ButtonLink>}>
           Pídenos el enlace actualizado por WhatsApp.
         </EmptyState>
       </div>
@@ -32,6 +32,7 @@ export default async function ReschedulePage({
   if (!["requested", "confirmed", "awaiting_payment"].includes(booking.status)) {
     return (
       <div className={wrap}>
+        <h1 className="text-xl text-text">Cambiar tu taquiza</h1>
         <Alert tone="warning" title="Esta taquiza ya no se puede cambiar" action={<ButtonLink variant="secondary" href={back}>Volver</ButtonLink>} />
       </div>
     );

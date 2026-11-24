@@ -75,7 +75,8 @@ test.describe("F10 después del evento", () => {
   test("F10-N1 reseña antes del evento: todavía no se puede", async ({ page }) => {
     const { manageUrl } = await bookTaquiza(page, { monthsAhead: 1, dayIndex: 20 });
     await page.goto(manageUrl.replace(/\/t\/(DGT-[A-Z0-9]+)\?/, "/t/$1/resena?"));
-    await expect(page.getByRole("heading", { name: "Todavía no es momento" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Todavía no es momento", level: 1 })).toBeVisible();
+    await a11y(page, "reseña antes del evento");
   });
 
   test("F10-E1 'No publicar' saca la reseña de la cola y no vuelve a aparecer", async ({ page, browser, newWatchedPage }) => {

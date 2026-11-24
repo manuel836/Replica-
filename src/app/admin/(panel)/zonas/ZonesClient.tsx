@@ -63,7 +63,7 @@ export function ZonesManager({ zones }: { zones: Zone[] }) {
   return (
     <div className="flex flex-col gap-3">
       {zones.length === 0 && !adding && (
-        <EmptyState icon={MapPin} title="Sin zonas">
+        <EmptyState as="h2" icon={MapPin} title="Sin zonas">
           Sin zonas, el formulario no pregunta la zona y no se cobra traslado.
         </EmptyState>
       )}

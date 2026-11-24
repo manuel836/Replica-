@@ -111,7 +111,7 @@ export function PackagesManager({ packages }: { packages: Row[] }) {
         Nuevo paquete
       </Button>
       {packages.length === 0 ? (
-        <EmptyState icon={PackageIcon} title="Sin paquetes">
+        <EmptyState as="h2" icon={PackageIcon} title="Sin paquetes">
           Crea al menos uno: sin paquetes, tus clientes no pueden agendar.
         </EmptyState>
       ) : (
