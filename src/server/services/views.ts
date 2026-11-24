@@ -28,7 +28,7 @@ async function joinRows(business: Business, bookings: Booking[]): Promise<Bookin
   }));
 }
 
-export type AgendaTab = "pendientes" | "proximas" | "pasadas";
+export type AgendaTab = "pendientes" | "proximas" | "pasadas" | "canceladas";
 
 export async function agenda(tab: AgendaTab) {
   const db = store();
@@ -42,8 +42,16 @@ export async function agenda(tab: AgendaTab) {
     bookings = [...attention, ...pending].filter((b) => !seen.has(b.id) && seen.add(b.id));
   } else if (tab === "proximas") {
     bookings = await db.listBookings(business.id, { statuses: ["confirmed"], from: today });
+  } else if (tab === "pasadas") {
+    bookings = (
+      await db.listBookings(business.id, { statuses: ["completed", "confirmed", "no_show"], to: addDaysLocal(today, -1) })
+    ).reverse();
   } else {
-    bookings = (await db.listBookings(business.id, { to: addDaysLocal(today, -1) })).reverse();
+    bookings = (
+      await db.listBookings(business.id, {
+        statuses: ["declined", "cancelled_by_customer", "cancelled_by_business", "expired"],
+      })
+    ).reverse();
   }
   const [counts, tomorrow] = await Promise.all([
     Promise.all([

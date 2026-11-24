@@ -13,12 +13,14 @@ const TABS: { id: AgendaTab; label: string }[] = [
   { id: "pendientes", label: "Por responder" },
   { id: "proximas", label: "Próximas" },
   { id: "pasadas", label: "Pasadas" },
+  { id: "canceladas", label: "Canceladas" },
 ];
 
 const EMPTY: Record<AgendaTab, { title: string; text: string }> = {
   pendientes: { title: "Nada por responder", text: "Cuando alguien pida una taquiza, aparecerá aquí." },
   proximas: { title: "Sin taquizas confirmadas", text: "Las taquizas que confirmes aparecerán aquí por fecha." },
   pasadas: { title: "Todavía no hay historial", text: "Aquí verás las taquizas que ya pasaron." },
+  canceladas: { title: "Nada cancelado", text: "Aquí verás las taquizas rechazadas, canceladas o vencidas." },
 };
 
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ tab?: string; aviso?: string }> }) {
@@ -72,7 +74,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
       <nav aria-label="Filtrar taquizas" className="flex gap-1 overflow-x-auto border-b border-border">
         {TABS.map((t) => {
           const active = t.id === tab;
-          const count = t.id === "pasadas" ? null : counts[t.id];
+          const count = t.id === "pendientes" || t.id === "proximas" ? counts[t.id] : null;
           return (
             <a
               key={t.id}
