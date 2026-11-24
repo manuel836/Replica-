@@ -12,18 +12,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-/** Los mismos valores que bookings.status en replica/schema.sql. */
-export type BookingStatus =
-  | "requested"
-  | "awaiting_payment"
-  | "confirmed"
-  | "proposed"
-  | "declined"
-  | "cancelled_by_customer"
-  | "cancelled_by_business"
-  | "completed"
-  | "no_show"
-  | "expired";
+import type { BookingStatus } from "@/lib/types";
+
+export type { BookingStatus };
 
 type Tone = "warning" | "success" | "accent" | "danger" | "neutral";
 

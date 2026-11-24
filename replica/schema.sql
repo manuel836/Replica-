@@ -178,6 +178,8 @@ create table bookings (
   business_id uuid not null references businesses(id) on delete cascade,
   code text not null unique check (code ~ '^[A-Z]{2,5}-[A-Z0-9]{4,8}$'), -- visible, no secreto
   manage_token_hash bytea not null,       -- sha256 del token del enlace privado; el token nunca se guarda
+  manage_token_version smallint not null default 1 check (manage_token_version > 0),
+                                          -- token = HMAC(APP_SECRET, id:versión); regenerar = versión + 1
   idempotency_key uuid unique,            -- evita duplicados por doble clic o reintento
   customer_id uuid not null references customers(id) on delete restrict,
   package_id uuid not null references packages(id) on delete restrict,

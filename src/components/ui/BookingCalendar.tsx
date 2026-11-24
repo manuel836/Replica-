@@ -7,8 +7,10 @@ import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 
+import type { DayState } from "@/lib/types";
+
 /** Estado de un día, como lo devuelve GET /api/disponibilidad/mes. */
-export type DayState = "available" | "few" | "full" | "blocked" | "closed" | "out";
+export type { DayState };
 
 const key = (d: Date) => format(d, "yyyy-MM-dd");
 
