@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="D' Garden Tacos">
+  <!-- Provisional: círculo negro con aro dorado y "DG" en crema, como el logo del negocio. Cámbialo por el logo real. -->
+  <circle cx="32" cy="32" r="31" fill="#141110"/>
+  <circle cx="32" cy="32" r="27" fill="none" stroke="#f2bd6c" stroke-width="3"/>
+  <text x="32" y="41" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="24" fill="#fbf7f0">DG</text>
+</svg>
