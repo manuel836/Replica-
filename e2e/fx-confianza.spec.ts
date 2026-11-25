@@ -140,3 +140,33 @@ test.describe("FX2 si cancelamos, sabes por qué", () => {
     await ctx.close();
   });
 });
+
+test.describe("FX4 avisa a tus invitados", () => {
+  test("FX4-H1 confirmada: WhatsApp y copiar con fecha, hora, dirección y mapa, sin el enlace privado", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const { manageUrl, code } = await bookTaquiza(page, { monthsAhead: 2, dayIndex: 19, payNow: true, address: "Calle Fiesta 45" });
+    await page.goto(manageUrl);
+    const section = page.getByRole("region", { name: "Avisa a tus invitados" });
+    await expect(section).toBeVisible();
+    await a11y(page, "S07 invitados");
+    const href = (await section.getByRole("link", { name: /Mandar por WhatsApp/ }).getAttribute("href"))!;
+    expect(href.startsWith("https://wa.me/?text=")).toBe(true);
+    const text = decodeURIComponent(href.split("text=")[1]);
+    expect(text).toMatch(/a las \d{2}:\d{2}/);
+    expect(text).toContain("Calle Fiesta 45");
+    expect(text).toContain("Cómo llegar: https://www.google.com/maps/search/?api=1&query=");
+    // Nunca el enlace privado: con él se cambia o se cancela.
+    expect(text).not.toContain(`/t/${code}`);
+    expect(text).not.toContain("k=");
+    await section.getByRole("button", { name: "Copiar texto" }).click();
+    await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Texto copiado" })).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(text);
+  });
+
+  test("FX4-E1 una solicitud sin confirmar todavía no muestra la invitación", async ({ page }) => {
+    const { manageUrl } = await bookTaquiza(page, { monthsAhead: 2, dayIndex: 20 });
+    await page.goto(manageUrl);
+    await expect(page.getByText("Solicitada").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Avisa a tus invitados" })).toHaveCount(0);
+  });
+});

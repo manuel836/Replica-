@@ -4,7 +4,7 @@ import { Alert, EmptyState } from "@/components/ui/Feedback";
 import { Timeline } from "@/components/ui/Misc";
 import { PriceSummary } from "@/components/ui/PriceSummary";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatMXN, whatsappLink } from "@/lib/format";
+import { formatMXN, mapsLink, whatsappLink } from "@/lib/format";
 import type { BookingEvent } from "@/lib/types";
 import { renderTemplate } from "@/server/domain/messages";
 import { refundableCents } from "@/server/domain/money";
@@ -12,6 +12,7 @@ import { formatDateLong, formatStamp, localTime, refundDeadline } from "@/server
 import { daysUntil } from "@/server/services/bookings";
 import { customerBooking } from "@/server/services/views";
 import { ManageActions } from "./ManageActions";
+import { ShareInvite } from "./ShareInvite";
 
 export const metadata = { title: "Tu taquiza", robots: { index: false } };
 
@@ -81,6 +82,15 @@ export default async function ManagePage({
       ? renderTemplate("request_received", { business, booking, customer, pkg, link: "" })
       : null;
   const manageQuery = `k=${encodeURIComponent(k!)}`;
+  // Invitación para los invitados: sin el enlace privado.
+  const place = [booking.address, booking.neighborhood, business.city].filter(Boolean).join(", ");
+  const when = formatDateLong(booking.eventDate);
+  const inviteText = [
+    `¡Te invito! Habrá taquiza de ${business.name} 🌮`,
+    `${when.charAt(0).toUpperCase()}${when.slice(1)} a las ${localTime(booking.startAt, tz)}`,
+    place,
+    `Cómo llegar: ${mapsLink(place)}`,
+  ].join("\n");
 
   return (
     <div className="mx-auto flex w-full max-w-flow flex-col gap-6 px-4 py-8">
@@ -171,6 +181,8 @@ export default async function ManagePage({
           </ButtonLink>
         )}
       </div>
+
+      {booking.status === "confirmed" && <ShareInvite text={inviteText} />}
 
       <ManageActions
         code={booking.code}

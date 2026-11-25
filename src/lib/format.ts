@@ -16,6 +16,11 @@ export function whatsappLink(phoneE164: string, text: string): string {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
+/** WhatsApp sin número: abre la app para que la persona elija a quién mandarlo. */
+export function whatsappShareLink(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
 /** Búsqueda de una dirección en Google Maps (Maps URLs, la forma pública y oficial). */
 export function mapsLink(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
