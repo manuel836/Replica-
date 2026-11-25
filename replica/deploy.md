@@ -1,12 +1,18 @@
 # Publicar: D' Garden Tacos
 
-Fecha: 2026-11-25. Commit revisado: la punta de la rama `claude/replica-skill-plugin-install-et8rcf`
-(ver el commit de este archivo).
+Fecha: 2026-11-25. Commit revisado: **`8bde269`, la punta de `main`** después de aprobar el
+pull request.
 
-**Visto bueno del dueño (2026-11-25):** preparar el pull request. Se creó `main` en GitHub desde el
-primer commit, con tu permiso, y se abrió el
-[pull request #1](https://github.com/manuel836/Replica-/pull/1). **Publicar al público: todavía
-no.**
+## Estado
+
+| qué | estado |
+| --- | --- |
+| [Pull request #1](https://github.com/manuel836/Replica-/pull/1) | ✅ Aprobado y unido a `main` (2026-11-25) |
+| Revisión previa sobre `main` | ✅ Todo pasa (tabla de abajo; corrida otra vez el 2026-11-25 sobre `8bde269`) |
+| Rama principal en GitHub | ⚠️ Todavía es `claude/replica-skill-plugin-install-et8rcf`. Cámbiala a `main` en Settings → Branches |
+| Vercel | ⏳ Sin conectar: en GitHub no hay ningún estado de despliegue de Vercel en los commits ni en el pull request |
+| Dirección en vivo | **Ninguna todavía.** Nada está publicado |
+| Visto bueno para publicar al público | Todavía no |
 
 Nada sale en vivo sin tu "sí". Tú creas las cuentas, compras el dominio y pegas las llaves (en
 Vercel, nunca en el chat). Aquí van los resultados de la revisión y los pasos exactos.
@@ -15,12 +21,12 @@ Vercel, nunca en el chat). Aquí van los resultados de la revisión y los pasos 
 
 | revisión | resultado |
 | --- | --- |
-| Pruebas de punta a punta | ✅ **95 de 95 con Postgres**; con datos en memoria, 93 pasaron y 2 se saltaron (solo corren con Postgres). Corrida del 2026-11-25 en `7d1586d`. Después solo cambiaron documentos, el comando de build y `.env.example` |
+| Pruebas de punta a punta | ✅ **95 de 95 con Postgres**, corridas sobre `main` (`8bde269`) el 2026-11-25. Antes, con datos en memoria: 93 pasaron y 2 se saltaron (solo corren con Postgres) |
 | Bugs S1 o S2 abiertos | ✅ Ninguno. 9 encontrados y 9 corregidos (`replica/bugs.md`) |
 | Paridad | ✅ 29 de 29 funciones obligatorias; puntuación 98.2 |
 | Barrido de marca (`sweep.py`) | ✅ Limpio, código de salida 0 |
 | Listado de tiendas (`listing.py`) | No aplica: no hay app en App Store ni Google Play. Termina con "no store section"; no se inventó un listado para que pasara |
-| Build de producción (`npm run build`) | ✅ Pasa (2026-11-25) |
+| Build de producción (`npm run build`) | ✅ Pasa sobre `main` (2026-11-25). Fuera de Vercel se saltan las migraciones, como debe ser |
 | `npm audit` (dependencias de producción) | ✅ 0 vulnerabilidades |
 | Aviso de privacidad y políticas | ✅ En `/politicas`. Lista a quien procesa datos: Mercado Pago, Supabase, Vercel, Resend, Cloudflare Turnstile y WhatsApp. ⚠️ **El aviso es provisional y lo debe revisar un abogado** (lo pide la LFPDPPP en México) |
 | Borrar datos | ✅ Los clientes no tienen cuenta. El dueño borra los datos de un cliente en Clientes ("Borrar sus datos"). El acceso de un ayudante se quita en Equipo |
@@ -118,10 +124,12 @@ No hay Google ni Apple: el panel entra con un enlace al correo. No hay URIs que 
 **Vercel** (el sistema ya trae `vercel.json` con el job diario a las 14:00 UTC, las 8:00 en Lázaro
 Cárdenas).
 
-- [ ] **Conectar el repositorio:** en Vercel, New Project → importa `manuel836/Replica-`.
-- [ ] **Llevar el código a `main`:** el
-  [pull request #1](https://github.com/manuel836/Replica-/pull/1) está abierto; al aprobarlo, `main`
-  publica producción y cada pull request tiene su vista previa.
+- [x] **Llevar el código a `main`:** el
+  [pull request #1](https://github.com/manuel836/Replica-/pull/1) ya se unió (2026-11-25).
+- [ ] **Rama principal:** en GitHub → Settings → Branches, pon `main` como rama principal.
+- [ ] **Conectar el repositorio:** en Vercel, New Project → importa `manuel836/Replica-` y en
+  Settings → Git pon `main` como rama de producción. Así `main` publica producción y cada pull
+  request tiene su vista previa.
 - [ ] **Comprar el dominio** en tu registrador, por ejemplo `dgardentacos.com` (`brand.md`), y
   agregarlo en Vercel → Settings → Domains.
 
@@ -172,10 +180,18 @@ de inicio" (ya tiene el ícono). Sin cuentas de Apple ni Google Play.
 
 ## Pendiente de ti para seguir
 
-1. **Revisar y aprobar el [pull request #1](https://github.com/manuel836/Replica-/pull/1).**
-   Después, en GitHub → Settings → Branches, pon `main` como rama principal.
-2. Las cuentas: Vercel, Supabase (proyecto de producción), Resend, Mercado Pago y el dominio.
-3. Tus datos, fotos y descripción en el panel.
+1. ~~Aprobar el pull request #1~~ ✅ Hecho.
+2. **En GitHub:** poner `main` como rama principal.
+3. **Vercel:** conectar el repositorio con `main` como rama de producción y las variables de la
+   sección 2. El primer deploy corre solo las migraciones.
+4. **Las otras cuentas:** Supabase (proyecto de producción, y la primera vez `npm run db:seed`),
+   Resend, Mercado Pago y el dominio.
+5. **Tus datos, fotos y descripción** en el panel.
 
-Cuando la vista previa esté arriba, hacemos la lista manual juntos. Luego las llaves de
-producción, el dominio y el anuncio (`replica/launch/launch-plan.md`).
+**Cuando Vercel te dé una dirección,** aunque sea la provisional `….vercel.app`, pásamela y hago
+el flujo completo en la página publicada:
+- portada, agendar, Mi taquiza, panel, correo y pago de prueba;
+- revisar que haya HTTPS, que el job diario responda y que funcione el webhook de Mercado Pago.
+
+Tú lo haces en tu celular. Luego van las llaves de producción, el dominio y el anuncio
+(`replica/launch/launch-plan.md`).
