@@ -164,7 +164,7 @@ Expected: el aro dorado con "DG" se ve redondo.
 Actual: el aro se ve ovalado (ancho ÷ alto = 0.875): el nombre largo empuja y encoge el círculo.
 Evidence: `replica/bugs/BUG-009.png`; prueba `R3-B3`, que mide el aro en la imagen generada.
 Suspected cause: el círculo no tenía `flexShrink: 0`.
-Status: fixed in the commit "test: third round" (la prueba falló antes y pasa después).
+Status: fixed in 03ec234 (la prueba falló antes y pasa después).
 
 ---
 
