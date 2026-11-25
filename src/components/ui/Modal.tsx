@@ -54,7 +54,8 @@ interface ConfirmDialogProps {
   confirmLabel: string;
   cancelLabel?: string;
   tone?: "primary" | "danger";
-  onConfirm: () => Promise<void> | void;
+  /** Si devuelve false, el diálogo se queda abierto (por ejemplo, falta un dato). */
+  onConfirm: () => Promise<void | boolean> | void | boolean;
   children?: ReactNode;
 }
 
@@ -91,8 +92,7 @@ export function ConfirmDialog({
             onClick={async () => {
               setBusy(true);
               try {
-                await onConfirm();
-                setOpen(false);
+                if ((await onConfirm()) !== false) setOpen(false);
               } finally {
                 setBusy(false);
               }

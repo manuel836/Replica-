@@ -47,6 +47,39 @@ function useAfter() {
   return { wa, error, handle, setError };
 }
 
+const REASONS = ["Ese día ya tenemos otro evento", "No llegamos a esa zona", "No alcanzamos a preparar todo para esa fecha"];
+
+/** Motivo obligatorio para el cliente, con sugerencias de un toque. */
+function ReasonField({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <TextareaField
+        label="Motivo para el cliente"
+        rows={2}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        error={error}
+        hint="Lo ve en su enlace, en el correo y en el WhatsApp."
+      />
+      <div className="flex flex-wrap gap-2" aria-label="Motivos frecuentes" role="group">
+        {REASONS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => onChange(r)}
+            className="min-h-9 rounded-pill border border-border-input bg-surface px-3 text-sm text-text hover:bg-surface-muted"
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const needsReason = (r: string) => r.trim().length < 3;
+const REASON_ERROR = "Escribe el motivo: el cliente lo va a ver.";
+
 /** Conflictos de agenda que el dueño puede saltarse (él decide si le da tiempo). */
 const OVERRIDABLE = ["day_full", "guests_full", "time_taken", "blocked_date", "closed_day", "outside_hours", "too_far"];
 
@@ -62,6 +95,7 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
   const { wa, error, handle } = useAfter();
   const [busy, setBusy] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [reasonError, setReasonError] = useState<string | undefined>();
   const pending = status === "requested" || status === "awaiting_payment";
 
   const act = async (key: string, fn: () => Promise<Result>, success: string) => {
@@ -112,13 +146,20 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
               </Button>
             }
             title="¿Rechazar esta solicitud?"
-            description={hasOnlineDeposit ? "Se devuelve el anticipo completo al cliente." : "La fecha se libera para otros clientes."}
+            description={
+              (hasOnlineDeposit ? "Se devuelve el anticipo completo al cliente. " : "La fecha se libera para otros clientes. ") +
+              "Si el problema es solo la fecha, mejor usa «Proponer otra fecha»."
+            }
             confirmLabel="Rechazar"
             onConfirm={async () => {
+              if (needsReason(reason)) {
+                setReasonError(REASON_ERROR);
+                return false;
+              }
               handle(await safe(rechazarTaquiza)(id, reason), "Solicitud rechazada");
             }}
           >
-            <TextareaField label="Motivo para el cliente" optional rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
+            <ReasonField value={reason} onChange={(v) => { setReason(v); setReasonError(undefined); }} error={reasonError} />
           </ConfirmDialog>
         )}
         {status === "confirmed" && (
@@ -154,10 +195,14 @@ export function BookingActions({ id, status, needsAttention, hasOnlineDeposit, g
             }
             confirmLabel="Sí, cancelar"
             onConfirm={async () => {
+              if (needsReason(reason)) {
+                setReasonError(REASON_ERROR);
+                return false;
+              }
               handle(await safe(cancelarPorNegocio)(id, reason), "Taquiza cancelada");
             }}
           >
-            <TextareaField label="Motivo para el cliente" optional rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
+            <ReasonField value={reason} onChange={(v) => { setReason(v); setReasonError(undefined); }} error={reasonError} />
           </ConfirmDialog>
         )}
         <ConfirmDialog

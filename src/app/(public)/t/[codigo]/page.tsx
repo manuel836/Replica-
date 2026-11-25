@@ -110,7 +110,12 @@ export default async function ManagePage({
       )}
       {booking.status === "declined" && (
         <Alert tone="danger" title="Esta vez no pudimos atender tu taquiza">
-          {booking.cancelReason}
+          {booking.cancelReason && `Motivo: ${booking.cancelReason}`}
+        </Alert>
+      )}
+      {booking.status === "cancelled_by_business" && (
+        <Alert tone="danger" title="Tuvimos que cancelar tu taquiza">
+          {booking.cancelReason && `Motivo: ${booking.cancelReason}`}
         </Alert>
       )}
 

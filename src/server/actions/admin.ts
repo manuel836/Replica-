@@ -57,9 +57,17 @@ export async function aceptarTaquiza(id: string, force = false) {
   });
 }
 
+/** El cliente siempre sabe por qué: rechazar o cancelar pide motivo (replica/fixes.md, FX2). */
+function requireReason(reason: string): string {
+  const r = String(reason ?? "").trim().slice(0, 300);
+  if (r.length < 3) throw new AppError("Escribe el motivo: el cliente lo va a ver.", "reason", "reason");
+  return r;
+}
+
 export async function rechazarTaquiza(id: string, reason: string) {
   return run(async () => {
     await requireAdmin();
+    reason = requireReason(reason);
     await bookings.declineBooking(id, reason.trim().slice(0, 300));
     refresh(id);
     return { whatsappUrl: await withWhatsApp(id, "declined", reason.trim()) };
@@ -97,7 +105,8 @@ export async function marcarNoRealizada(id: string, reason: string) {
 export async function cancelarPorNegocio(id: string, reason: string) {
   return run(async () => {
     await requireAdmin("owner");
-    const r = await bookings.cancelByBusiness(id, reason.trim().slice(0, 300));
+    reason = requireReason(reason);
+    const r = await bookings.cancelByBusiness(id, reason);
     refresh(id);
     return { refundedCents: r.refundedCents, whatsappUrl: await withWhatsApp(id, "cancelled", reason.trim()) };
   });

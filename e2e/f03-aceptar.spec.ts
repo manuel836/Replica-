@@ -74,6 +74,7 @@ test.describe("F03 el dueño revisa y acepta", () => {
     await helper.getByRole("button", { name: "Aceptar", exact: true }).click();
     await expect(helper.getByText("Taquiza aceptada")).toBeVisible();
     await helper.getByRole("button", { name: "Cancelar taquiza" }).click();
+    await helper.getByRole("dialog").getByLabel(/^Motivo para el cliente/).fill("Prueba de permisos");
     await helper.getByRole("dialog").getByRole("button", { name: "Sí, cancelar" }).click();
     await expect(helper.getByRole("alert").filter({ hasText: "Solo el dueño puede hacer esto." })).toBeVisible();
     await ctx.close();

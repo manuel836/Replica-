@@ -1,5 +1,5 @@
 import type { Browser, Page } from "@playwright/test";
-import { OWNER_STATE, a11y, expect, fillDetails, mock, pickDayAndSlot, test } from "./helpers";
+import { OWNER_STATE, a11y, bookTaquiza, bookingIdByCode, expect, fillDetails, mock, pickDayAndSlot, test } from "./helpers";
 
 // Arreglos de /replica-entrepreneur (replica/fixes.md): que el cliente siempre sepa qué apartó.
 
@@ -94,5 +94,49 @@ test.describe("FX3 anticipo claro, con fecha y monto", () => {
     const eventDate = parseEs(await page.locator("p", { hasText: "Revisa tu fecha" }).locator("..").innerText());
     test.skip(eventDate.getTime() - Date.now() > 7 * 86_400_000, "El primer día libre ya cae fuera del plazo");
     await expect(page.getByText("Faltan menos de 7 días: si después cancelas, el anticipo ya no se devuelve.")).toBeVisible();
+  });
+});
+
+test.describe("FX2 si cancelamos, sabes por qué", () => {
+  test("FX2-H1 rechazar pide motivo; la sugerencia de un toque llega al cliente en su enlace y en su correo", async ({ page, browser, newWatchedPage }) => {
+    const email = `rechazo${Date.now()}@correo.test`;
+    const { code, manageUrl } = await bookTaquiza(page, { monthsAhead: 1, dayIndex: 9, email });
+    const ctx = await browser.newContext({ storageState: OWNER_STATE });
+    const admin = await newWatchedPage(ctx);
+    await admin.goto(`/admin/t/${await bookingIdByCode(admin, code)}`);
+    await admin.getByRole("button", { name: "Rechazar", exact: true }).click();
+    const dialog = admin.getByRole("dialog");
+    await expect(dialog).toContainText("mejor usa «Proponer otra fecha»");
+    await dialog.getByRole("button", { name: "Rechazar", exact: true }).click();
+    await expect(dialog.getByText("Escribe el motivo: el cliente lo va a ver.")).toBeVisible();
+    await a11y(admin, "S12 rechazar");
+    await dialog.getByRole("group", { name: "Motivos frecuentes" }).getByRole("button", { name: "No llegamos a esa zona" }).click();
+    await expect(dialog.getByLabel(/^Motivo para el cliente/)).toHaveValue("No llegamos a esa zona");
+    await dialog.getByRole("button", { name: "Rechazar", exact: true }).click();
+    await expect(admin.locator("[data-sonner-toast]").filter({ hasText: "Solicitud rechazada" })).toBeVisible();
+
+    await page.goto(manageUrl);
+    await expect(page.getByRole("alert").filter({ hasText: "Esta vez no pudimos atender tu taquiza" })).toContainText("Motivo: No llegamos a esa zona");
+    await expect.poll(async () => (await mock.emails(email)).find((e) => /No podemos atender/.test(e.subject))?.text ?? "").toContain("Motivo: No llegamos a esa zona");
+    await ctx.close();
+  });
+
+  test("FX2-H2 el dueño cancela una confirmada: el cliente ve 'Tuvimos que cancelar' con el motivo", async ({ page, browser, newWatchedPage }) => {
+    const { code, manageUrl } = await bookTaquiza(page, { monthsAhead: 1, dayIndex: 10 });
+    const ctx = await browser.newContext({ storageState: OWNER_STATE });
+    const admin = await newWatchedPage(ctx);
+    await admin.goto(`/admin/t/${await bookingIdByCode(admin, code)}`);
+    await admin.getByRole("button", { name: "Aceptar", exact: true }).click();
+    await expect(admin.getByText("Taquiza aceptada")).toBeVisible();
+    await admin.getByRole("button", { name: "Cancelar taquiza" }).click();
+    const dialog = admin.getByRole("dialog");
+    await dialog.getByRole("button", { name: "Sí, cancelar" }).click();
+    await expect(dialog.getByText("Escribe el motivo: el cliente lo va a ver.")).toBeVisible();
+    await dialog.getByLabel(/^Motivo para el cliente/).fill("Se nos descompuso el trompo");
+    await dialog.getByRole("button", { name: "Sí, cancelar" }).click();
+    await expect(admin.locator("[data-sonner-toast]").filter({ hasText: "Taquiza cancelada" })).toBeVisible();
+    await page.goto(manageUrl);
+    await expect(page.getByRole("alert").filter({ hasText: "Tuvimos que cancelar tu taquiza" })).toContainText("Motivo: Se nos descompuso el trompo");
+    await ctx.close();
   });
 });
