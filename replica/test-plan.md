@@ -1,6 +1,6 @@
 # Plan de pruebas: taquizas de D' Garden Tacos
 
-Build: `da63f7c` y siguientes; la última corrida, en `c9d37a9`. Fecha: 2026-11-24.
+Build: `da63f7c` y siguientes; la última corrida, en `5a16592`. Fecha: 2026-11-25.
 Entorno: local; la app en `next dev` y una imitación de Mercado Pago y Resend (`e2e/mocks/providers.mjs`).
 
 | corrida | datos | resultado |
@@ -10,6 +10,8 @@ Entorno: local; la app en `next dev` y una imitación de Mercado Pago y Resend (
 | Final | Postgres 16 | **55 pasaron, 0 fallaron** |
 | Después de `/replica-build` (16 casos nuevos) | memoria | **69 pasaron, 0 fallaron**, 2 se saltaron (solo Postgres) |
 | Después de `/replica-build` (16 casos nuevos) | Postgres 16 | **71 pasaron, 0 fallaron** |
+| Después de los arreglos de `/replica-entrepreneur` (12 casos nuevos) | memoria | **81 pasaron, 0 fallaron**, 2 se saltaron (solo Postgres) |
+| Después de los arreglos de `/replica-entrepreneur` (12 casos nuevos) | Postgres 16 | **83 pasaron, 0 fallaron** |
 
 Cómo correrlas:
 
@@ -106,6 +108,25 @@ selectores van por rol y etiqueta, nunca por clases.
 | RP-E1 | | vacío y celular | Un mes sin taquizas; el reporte a 390 px; mes inválido en el CSV | "Sin taquizas este mes"; 0 px de desborde; axe; 400 | e2e | ✅ |
 | RP-N1 | | permiso | Ayudante y alguien sin sesión | 403 y 401 en el CSV; el ayudante no entra al reporte | e2e | ✅ |
 
+## Arreglos de `/replica-entrepreneur` (`replica/fixes.md`)
+
+Todas en `e2e/fx-confianza.spec.ts`.
+
+| caso | arreglo | tipo | pasos | esperado | auto | resultado |
+| --- | --- | --- | --- | --- | --- | --- |
+| FX1-H1 | La fecha no cambia sola | feliz | Llegar al paso 3 | "Revisa tu fecha" con día, año y hora; el botón final dice día y hora; "Cambiar" regresa al paso 1; axe | e2e | ✅ |
+| FX1-E1 | | invitados de más | Límite de 100 invitados por día; elegir día con 40; subir a 150 | Aviso "ya no tiene lugar para 150 invitados" en vez de soltar la fecha callado | e2e | ✅ |
+| FX3-H1 | Anticipo claro | feliz | Elegir pagar, pagar y abrir Mi taquiza; correo de confirmación | "Si cancelas a más tardar el {día}, te devolvemos $1,800" con la fecha correcta (evento menos 7 días) en S05, S07 y el correo | e2e | ✅ |
+| FX3-E1 | | fuera de plazo | Agendar dentro de los 7 días | Antes de pagar: "el anticipo ya no se devuelve" | e2e | ✅ |
+| FX2-H1 | Motivo al cancelar | negativo y feliz | Rechazar sin motivo; usar una sugerencia | No deja sin motivo; el cliente ve "Motivo: …" en su enlace y en el correo | e2e | ✅ |
+| FX2-H2 | | feliz | El dueño cancela una confirmada | Pide motivo; el cliente ve "Tuvimos que cancelar tu taquiza" con el motivo | e2e | ✅ |
+| FX4-H1 | Avisa a tus invitados | feliz | Confirmada → Mandar por WhatsApp y Copiar texto | Fecha, hora, dirección y mapa; **nunca** el enlace privado; lo copiado es igual al mensaje; axe | e2e | ✅ |
+| FX4-E1 | | sin confirmar | Solicitud pendiente | No aparece la invitación | e2e | ✅ |
+| FX5-H1 | Recupera tu enlace | feliz y privacidad | Desde "Este enlace no funciona"; número inválido; número con correo; número que no existe | Le llega su enlace y funciona; la respuesta es igual para un número que no existe; axe | e2e | ✅ |
+| FX5-N1 | | abuso | 4 intentos con el mismo número | El 4.º se frena | e2e | ✅ |
+| FX6-H1 | Comparte tu página | feliz | Menú → Compartir; descargar QR; copiar un texto; celular | Enlace, QR en SVG para descargar, textos con la ciudad y el enlace; 0 px de desborde; axe | e2e | ✅ |
+| FX6-N1 | | sin sesión | QR y página sin sesión | 401 y a la página de entrar | e2e | ✅ |
+
 ## Lista manual (no se puede automatizar aquí)
 
 Para hacerla cuando el dueño tenga sus cuentas (ver `replica/backend.md`). Anota fecha, teléfono
@@ -116,6 +137,8 @@ y resultado.
 - [ ] **Correo real:** el enlace de entrada, el aviso de solicitud y los correos al cliente (confirmación y
   recordatorio) llegan a la bandeja de entrada, no a spam. Responder a uno de cliente llega a tu correo.
 - [ ] **CSV en Excel y Google Sheets:** los acentos y los montos se ven bien.
+- [ ] **QR impreso:** escanearlo con la cámara de un Android y de un iPhone abre la página de agendar (con tu dominio, ya publicado).
+- [ ] **"Mandar por WhatsApp" a tus invitados** en un celular: abre WhatsApp para elegir a quién mandarlo.
 - [ ] **WhatsApp en el teléfono:** los botones abren la app con el mensaje y el número correctos (Android y iPhone).
 - [ ] **Celular real de gama baja con red lenta (3G):**
   - Agendar completo.

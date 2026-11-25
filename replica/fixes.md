@@ -153,6 +153,10 @@ tiene que venir de tus clientes, no de estas reseñas.
 
 ## 4. Plan de arreglos
 
+**Estado (2026-11-25): los 6 están construidos y probados** (`e2e/fx-confianza.spec.ts`; commits
+`7aa3e57`, `f8c9c5a`, `29a2085`, `e2e2f69`, `079c1e1` y `5a16592`). Del 2 falta una parte:
+proponer otra fecha para una taquiza ya confirmada (ver `build-log.md`).
+
 Elegidos por evidencia y por lo barato que salen. Tamaño: S = horas, M = un día. Cada uno quedó
 como fila en `replica/features.csv` con `original = no` y `clone = no`.
 
