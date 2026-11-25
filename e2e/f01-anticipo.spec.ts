@@ -88,7 +88,7 @@ test.describe("F01 el cliente agenda pagando el anticipo en línea", () => {
     await context.setOffline(true);
     const send = page.getByRole("button", { name: "Enviar solicitud" });
     await send.click();
-    await expect(page.getByRole("alert").filter({ hasText: /conexión/i })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: /No pudimos conectarnos.*lo que escribiste sigue aquí/ })).toBeVisible();
     await expect(send).toBeEnabled();
     await context.setOffline(false);
     // Los errores de red del navegador son esperados aquí.

@@ -29,6 +29,9 @@ export default async function BusinessPage() {
             <p className="text-sm font-semibold tracking-wide text-brand uppercase">Taquizas · {business.city}</p>
             <h1 className="text-display text-on-ink">La plancha de {business.name} en tu fiesta</h1>
             <p className="text-lg font-normal text-on-ink-muted">{business.description}</p>
+            <p className="text-base font-semibold text-on-ink">
+              Tú eliges el día. Te confirma por WhatsApp el mismo equipo que llega a servir.
+            </p>
           </div>
           {active.length > 0 ? (
             <div className="max-w-flow">
@@ -69,7 +72,7 @@ export default async function BusinessPage() {
             {[
               { icon: CalendarCheck, title: "Elige fecha y hora", text: "Ves en el calendario qué días tenemos libres." },
               { icon: ClipboardList, title: "Cuéntanos de tu evento", text: "Paquete, invitados y dirección. Sin crear cuenta." },
-              { icon: Truck, title: "Llegamos con la plancha", text: "Te confirmamos por WhatsApp y el día del evento servimos." },
+              { icon: Truck, title: "Te confirmamos y llegamos", text: "Nosotros mismos te confirmamos por WhatsApp. El día del evento llegamos con la plancha." },
             ].map(({ icon: Icon, title, text }, i) => (
               <li key={title} className="flex gap-3 rounded-lg border border-border bg-surface p-4">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-accent-subtle text-accent-text">

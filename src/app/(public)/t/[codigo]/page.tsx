@@ -32,10 +32,10 @@ const EVENT_LABEL: Partial<Record<BookingEvent["type"], string>> = {
 };
 
 const HEADLINE: Record<string, { title: string; body: string; tone: "success" | "info" | "warning" }> = {
-  confirmed: { title: "¡Listo! Tu taquiza está confirmada", body: "Te esperamos con la plancha encendida.", tone: "success" },
+  confirmed: { title: "¡Listo! Tu taquiza está confirmada", body: "Ese día llegamos con la plancha encendida.", tone: "success" },
   requested: {
     title: "Recibimos tu solicitud",
-    body: "Tu fecha está apartada mientras te confirmamos por WhatsApp.",
+    body: "Ya apartamos tu fecha. Te confirmamos nosotros mismos por WhatsApp.",
     tone: "info",
   },
   awaiting_payment: { title: "Falta tu anticipo", body: "Paga el anticipo para confirmar tu fecha.", tone: "warning" },

@@ -37,7 +37,7 @@ test.describe("Correos al cliente", () => {
     await admin.getByRole("button", { name: "Aceptar", exact: true }).click();
     await expect(admin.getByText("Taquiza aceptada")).toBeVisible();
     const confirmed = await waitEmail(to, /está confirmada/);
-    expect(confirmed.text).toContain("Te esperamos el");
+    expect(confirmed.text).toContain("Ahí estaremos el");
     await admin.reload();
     await expect(admin.getByText("Correo al cliente: taquiza confirmada")).toBeVisible();
 

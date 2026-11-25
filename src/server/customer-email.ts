@@ -105,7 +105,7 @@ export function composeCustomerEmail(kind: CustomerEmailKind, c: EmailCtx): Comp
         subject: `Tu taquiza está confirmada (${code})`,
         title: "¡Tu taquiza está confirmada!",
         paragraphs: [
-          `Hola, ${name}. Te esperamos el ${when}.`,
+          `Hola, ${name}. Ahí estaremos el ${when}, con la plancha encendida.`,
           ...details(c),
           ...(c.refundTerms ? [c.refundTerms] : []),
           "Si necesitas cambiar la fecha o los invitados, o cancelar, hazlo desde tu enlace.",
