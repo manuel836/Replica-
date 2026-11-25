@@ -29,6 +29,7 @@ export default async function AgendarPage({ searchParams }: { searchParams: Prom
           requestHoldHours: business.requestHoldHours,
           confirmationMode: business.confirmationMode,
           minNoticeDays: business.minNoticeDays,
+          refundCutoffDays: business.refundCutoffDays,
         }}
         packages={active.map((p) => ({
           id: p.id,

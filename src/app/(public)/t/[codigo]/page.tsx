@@ -7,7 +7,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatMXN, whatsappLink } from "@/lib/format";
 import type { BookingEvent } from "@/lib/types";
 import { renderTemplate } from "@/server/domain/messages";
-import { formatDateLong, formatStamp, localTime } from "@/server/domain/time";
+import { refundableCents } from "@/server/domain/money";
+import { formatDateLong, formatStamp, localTime, refundDeadline } from "@/server/domain/time";
 import { daysUntil } from "@/server/services/bookings";
 import { customerBooking } from "@/server/services/views";
 import { ManageActions } from "./ManageActions";
@@ -66,6 +67,14 @@ export default async function ManagePage({
   const refunded = payments.filter((p) => p.kind === "refund").reduce((s, p) => s + p.amountCents, 0);
   const daysLeft = daysUntil(booking.eventDate, business);
   const refundable = daysLeft >= business.refundCutoffDays;
+  // Hasta cuándo se devuelve el anticipo, con fecha y monto (no "faltan N días").
+  const deadlineLabel = formatDateLong(refundDeadline(booking.eventDate, business.refundCutoffDays));
+  const onlineDeposit = payments.find((p) => p.kind === "deposit" && p.status === "approved" && p.provider !== "manual");
+  const backCents = onlineDeposit ? refundableCents(onlineDeposit, payments) : booking.depositCents;
+  const active = ["requested", "awaiting_payment", "confirmed", "proposed"].includes(booking.status);
+  const refundTerms = refundable
+    ? `Si cancelas a más tardar el ${deadlineLabel}, te devolvemos ${formatMXN(backCents)} del anticipo. Después de esa fecha ya no se devuelve.`
+    : `El anticipo ya no es reembolsable: el plazo para cancelar con devolución terminó el ${deadlineLabel}.`;
   const head = nuevo ? HEADLINE[booking.status] : undefined;
   const requestText =
     business.whatsappE164 && customer
@@ -131,7 +140,16 @@ export default async function ManagePage({
         addonsCents={booking.addonsCents}
         depositCents={booking.depositCents}
       />
-      {paidDeposit && <Alert tone="success" title={`Anticipo pagado: ${formatMXN(booking.depositCents)}`} />}
+      {paidDeposit && (
+        <Alert tone="success" title={`Anticipo pagado: ${formatMXN(booking.depositCents)}`}>
+          {active && refundTerms}
+        </Alert>
+      )}
+      {!paidDeposit && active && booking.depositCents > 0 && refundable && (
+        <p className="text-sm text-text-muted">
+          Si pagas el anticipo y luego cancelas a más tardar el {deadlineLabel}, te lo devolvemos completo.
+        </p>
+      )}
       {refunded > 0 && <Alert tone="info" title={`Te devolvimos ${formatMXN(refunded)}`}>Puede tardar unos días en verse en tu tarjeta.</Alert>}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -156,13 +174,7 @@ export default async function ManagePage({
         canPay={booking.depositCents > 0 && !paidDeposit && ["requested", "awaiting_payment", "confirmed"].includes(booking.status)}
         depositLabel={formatMXN(booking.depositCents)}
         cancelPolicy={business.cancellationPolicy}
-        refundNote={
-          paidDeposit
-            ? refundable
-              ? `Faltan ${daysLeft} días: si cancelas, te devolvemos el anticipo.`
-              : `Faltan ${daysLeft} días: el anticipo ya no es reembolsable.`
-            : null
-        }
+        refundNote={paidDeposit ? refundTerms : null}
         changeHref={`/t/${booking.code}/cambiar?${manageQuery}`}
       />
 

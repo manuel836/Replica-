@@ -77,3 +77,4 @@ consola y el desborde horizontal. Resultado final: 0 errores de consola, 0 viola
 | arreglo | estado | notas |
 | --- | --- | --- |
 | FX1 la fecha no cambia sola | done | Paso 3 con "Revisa tu fecha" (día, año, hora, invitados y botón Cambiar). El botón final dice día y hora. Si al cambiar invitados el día o la hora dejan de estar libres, se avisa en vez de soltarlos callado. Pruebas `e2e/fx-confianza.spec.ts` (FX1-H1, FX1-E1) |
+| FX3 anticipo claro | done | "Si cancelas a más tardar el sábado 7 de diciembre, te devolvemos $1,800": al elegir pagar (S05), en Mi taquiza (S07), en el diálogo de cancelar y en los correos. Si ya pasó el plazo, se dice antes de pagar. Fecha límite = día del evento menos los días de la política (`refundDeadline`), la misma regla que el reembolso. Pruebas FX3-H1, FX3-E1 y F05-H2 actualizada |

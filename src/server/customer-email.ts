@@ -3,7 +3,7 @@ import type { Booking, Business, Customer, Message, Package } from "@/lib/types"
 import { formatMXN } from "@/lib/format";
 import { baseUrl, managePath } from "./context";
 import { store } from "./data";
-import { formatDateLong, formatStamp, localTime } from "./domain/time";
+import { formatDateLong, formatStamp, localTime, refundDeadline, todayLocal } from "./domain/time";
 import { layout, sendEmail } from "./email";
 
 // Correos al cliente. Solo salen si dejó su correo al agendar (es opcional); el canal principal
@@ -55,6 +55,8 @@ export interface EmailCtx {
   reason?: string;
   refundedCents?: number;
   by?: "customer" | "business";
+  /** Hasta cuándo y cuánto se devuelve del anticipo, ya en palabras. */
+  refundTerms?: string;
 }
 
 interface Composed {
@@ -105,6 +107,7 @@ export function composeCustomerEmail(kind: CustomerEmailKind, c: EmailCtx): Comp
         paragraphs: [
           `Hola, ${name}. Te esperamos el ${when}.`,
           ...details(c),
+          ...(c.refundTerms ? [c.refundTerms] : []),
           "Si necesitas cambiar la fecha o los invitados, o cancelar, hazlo desde tu enlace.",
         ],
         button: view,
@@ -116,6 +119,7 @@ export function composeCustomerEmail(kind: CustomerEmailKind, c: EmailCtx): Comp
         paragraphs: [
           `Hola, ${name}. ${shop} puede atender tu taquiza del ${when}.`,
           `Para confirmarla falta el anticipo de ${formatMXN(c.booking.depositCents)}. Lo pagas desde tu enlace.`,
+          ...(c.refundTerms ? [c.refundTerms] : []),
         ],
         button: { label: "Pagar el anticipo", url: c.link },
       };
@@ -217,9 +221,21 @@ export async function notifyCustomer(
       if (earlier.some((m) => m.channel === "email" && m.template === template)) return;
     }
     const pkg = await db.getPackage(business.id, booking.packageId);
+    let refundTerms: string | undefined;
+    if ((kind === "confirmed" || kind === "payment_link") && booking.depositCents > 0) {
+      const deadline = refundDeadline(booking.eventDate, business.refundCutoffDays);
+      if (deadline >= todayLocal(business.timezone)) {
+        const paid = (await db.listPayments(booking.id)).find((p) => p.kind === "deposit" && p.status === "approved");
+        refundTerms = paid
+          ? `Si cancelas a más tardar el ${formatDateLong(deadline)}, te devolvemos tu anticipo de ${formatMXN(paid.amountCents)}.`
+          : kind === "payment_link"
+            ? `Si pagas y luego cancelas a más tardar el ${formatDateLong(deadline)}, te lo devolvemos completo.`
+            : undefined;
+      }
+    }
     let path = managePath(booking);
     if (kind === "review_request") path = path.replace(`/t/${booking.code}?`, `/t/${booking.code}/resena?`);
-    const e = composeCustomerEmail(kind, { business, booking, customer, pkg, link: `${await appBase()}${path}`, ...extra });
+    const e = composeCustomerEmail(kind, { business, booking, customer, pkg, link: `${await appBase()}${path}`, refundTerms, ...extra });
     const body = layout({
       title: e.title,
       paragraphs: e.paragraphs,

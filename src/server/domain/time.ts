@@ -97,3 +97,11 @@ export function parseLocalDate(s: string | undefined | null): string | null {
   const d = new Date(`${s}T12:00:00Z`);
   return Number.isNaN(d.getTime()) || format(d, "yyyy-MM-dd") !== s ? null : s;
 }
+
+/**
+ * Último día en que cancelar todavía devuelve el anticipo: la fecha del evento menos los días
+ * de la política. Cancelar ese día sí lo devuelve (igual que daysUntil >= refundCutoffDays).
+ */
+export function refundDeadline(eventDate: string, refundCutoffDays: number): string {
+  return addDaysLocal(eventDate, -refundCutoffDays);
+}

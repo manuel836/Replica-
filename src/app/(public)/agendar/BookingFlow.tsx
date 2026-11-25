@@ -18,6 +18,7 @@ import { StepBar } from "@/components/ui/StepBar";
 import { TimeSlots, type Slot } from "@/components/ui/TimeSlots";
 import { Turnstile } from "@/components/Turnstile";
 import { crearTaquiza } from "@/server/actions/public";
+import { formatMXN } from "@/lib/format";
 import { safe } from "@/lib/safe-action";
 
 interface Props {
@@ -31,6 +32,7 @@ interface Props {
     requestHoldHours: number;
     confirmationMode: "auto" | "manual";
     minNoticeDays: number;
+    refundCutoffDays: number;
   };
   packages: PackageInfo[];
   zones: { id: string; name: string; travelFeeCents: number }[];
@@ -48,6 +50,17 @@ const monthKey = (d: Date) => format(d, "yyyy-MM");
 /** Borrador del formulario en esta pestaña: sobrevive a recargar y se borra al enviar. */
 const DRAFT_KEY = "dg-agendar-borrador";
 const toDate = (ymd: string) => new Date(`${ymd}T12:00:00`);
+
+/** "Si cancelas a más tardar el sábado 7 de diciembre, te devolvemos los $1,800 completos." */
+function refundTerms(date: string, cutoffDays: number, today: string, depositCents: number): string {
+  const d = toDate(date);
+  d.setDate(d.getDate() - cutoffDays);
+  const deadline = format(d, "yyyy-MM-dd");
+  const label = format(d, "EEEE d 'de' MMMM", { locale: es });
+  return deadline >= today
+    ? `Si cancelas a más tardar el ${label}, te devolvemos los ${formatMXN(depositCents)} completos.`
+    : `Faltan menos de ${cutoffDays} días: si después cancelas, el anticipo ya no se devuelve.`;
+}
 
 function deposit(b: Props["business"], total: number) {
   if (b.depositMode === "none" || total === 0) return 0;
@@ -556,6 +569,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
                 depositCents={depositCents}
                 depositMode={business.depositMode === "required" ? "required" : "optional"}
                 holdMinutes={business.paymentHoldMinutes}
+                refundNote={date ? refundTerms(date, business.refundCutoffDays, today, depositCents) : undefined}
               />
             )}
             {(depositCents === 0 || payMode === "later") && (

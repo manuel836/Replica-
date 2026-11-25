@@ -14,19 +14,21 @@ interface PaymentChoiceProps {
   /** "required": solo se muestra "pagar ahora". "optional": el cliente elige. */
   depositMode: "optional" | "required";
   holdMinutes?: number;
+  /** Hasta cuándo se devuelve el anticipo, ya en palabras. */
+  refundNote?: string;
 }
 
 /**
  * S05. El formulario de tarjeta NO es nuestro: Mercado Pago Checkout Pro lo muestra en su
  * propia página. Aquí solo se elige cómo pagar y se explica qué pasa después.
  */
-export function PaymentChoice({ value, onChange, depositCents, depositMode, holdMinutes = 30 }: PaymentChoiceProps) {
+export function PaymentChoice({ value, onChange, depositCents, depositMode, holdMinutes = 30, refundNote }: PaymentChoiceProps) {
   const name = useId();
   const options: { mode: PayMode; title: string; body: string; icon: typeof CreditCard }[] = [
     {
       mode: "now",
       title: `Pagar anticipo de ${formatMXN(depositCents)} ahora`,
-      body: `Con tarjeta o Mercado Pago. Tu fecha queda confirmada al pagar (se aparta ${holdMinutes} minutos mientras pagas).`,
+      body: `Con tarjeta o Mercado Pago. Tu fecha queda confirmada al pagar (se aparta ${holdMinutes} minutos mientras pagas).${refundNote ? ` ${refundNote}` : ""}`,
       icon: CreditCard,
     },
     {

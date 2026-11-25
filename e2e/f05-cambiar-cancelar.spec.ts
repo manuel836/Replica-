@@ -27,7 +27,7 @@ test.describe("F05 el cliente cambia o cancela", () => {
     await bookTaquiza(page, { monthsAhead: 2, dayIndex: 10, payNow: true });
     const before = (await mock.state()).refunds.length;
     await page.getByRole("button", { name: "Cancelar taquiza" }).click();
-    await expect(page.getByRole("dialog")).toContainText("te devolvemos el anticipo");
+    await expect(page.getByRole("dialog")).toContainText(/Si cancelas a más tardar el \S+ \d+ de \S+, te devolvemos \$1,800 del anticipo/);
     await page.getByRole("button", { name: "Sí, cancelar" }).click();
     await expect(page.getByText(/Cancelada\. Te devolvemos/)).toBeVisible();
     const after = (await mock.state()).refunds;
