@@ -71,3 +71,9 @@ consola y el desborde horizontal. Resultado final: 0 errores de consola, 0 viola
 | S12 reembolso parcial | done | Solo el dueño. Un diálogo con el monto (hasta lo que quede del anticipo) y el motivo. Llave de idempotencia por intento. Al cancelar o rechazar después, se devuelve solo lo que falte. Al hacerlo salió BUG-008 (el "Pagado" restaba dos veces el reembolso). Pruebas `e2e/s12-reembolso.spec.ts` |
 | S20 Equipo | done | Pantalla nueva `/admin/equipo` (solo el dueño), enlazada desde el menú, Ajustes y Mi cuenta. Dar acceso manda un correo de invitación; quitarlo borra a la persona y su sesión deja de servir. Hasta 10 ayudantes. Pruebas `e2e/equipo.spec.ts` |
 | S21 Reportes | done | Pantalla nueva `/admin/reportes` (solo el dueño) con las cifras del mes contra el mes anterior, tabla por paquete y detalle, y descarga en CSV (mes o todo). El CSV antepone `'` a lo que empieza con = + - @ para que Excel no lo ejecute. Pruebas `e2e/reportes.spec.ts` |
+
+## Arreglos de `/replica-entrepreneur` (2026-11-25)
+
+| arreglo | estado | notas |
+| --- | --- | --- |
+| FX1 la fecha no cambia sola | done | Paso 3 con "Revisa tu fecha" (día, año, hora, invitados y botón Cambiar). El botón final dice día y hora. Si al cambiar invitados el día o la hora dejan de estar libres, se avisa en vez de soltarlos callado. Pruebas `e2e/fx-confianza.spec.ts` (FX1-H1, FX1-E1) |

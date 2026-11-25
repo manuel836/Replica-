@@ -85,6 +85,8 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
   const [accept, setAccept] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [banner, setBanner] = useState<string | null>(null);
+  // Aviso cuando algo que eligió deja de estar libre: nunca se cambia en silencio.
+  const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const idempotencyKey = useRef<string>("");
@@ -180,13 +182,24 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
     if (date) loadDay(date, guests);
   }, [date, guests, loadDay]);
 
-  // Si al cambiar invitados la fecha elegida ya no está libre, se suelta.
+  // Si al cambiar invitados la fecha elegida ya no está libre, se suelta y se dice.
   useEffect(() => {
     if (date && days[date] && !["available", "few"].includes(days[date])) {
+      setNotice(
+        `El ${format(toDate(date), "EEEE d 'de' MMMM", { locale: es })} ya no tiene lugar para ${guests} invitados. Elige otra fecha.`,
+      );
       setDate(null);
       setTime(undefined);
     }
-  }, [days, date]);
+  }, [days, date, guests]);
+
+  // Igual con la hora: si ya no está libre para ese número de invitados, se suelta y se dice.
+  useEffect(() => {
+    if (date && time && slots && !slots.some((s) => s.time === time && s.free)) {
+      setNotice(`Las ${time} del ${format(toDate(date), "d 'de' MMMM", { locale: es })} ya no están libres para ${guests} invitados. Elige otra hora.`);
+      setTime(undefined);
+    }
+  }, [slots, date, time, guests]);
 
   const shownDays = Object.entries(days).filter(([d]) => d.startsWith(monthKey(month)));
   const noneThisMonth =
@@ -288,6 +301,11 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
             {banner}
           </Alert>
         )}
+        {notice && step === 0 && (
+          <Alert tone="warning" title="Cambió la disponibilidad">
+            {notice}
+          </Alert>
+        )}
 
         {step === 0 && (
           <div className="flex flex-col gap-6">
@@ -325,6 +343,7 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
                     selected={date ? toDate(date) : undefined}
                     onSelect={(d) => {
                       setTime(undefined);
+                      setNotice(null);
                       setDate(d ? format(d, "yyyy-MM-dd") : null);
                     }}
                   />
@@ -370,7 +389,14 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
                 ) : slots === null ? (
                   <p className="p-4 text-sm text-text-muted">Buscando horarios…</p>
                 ) : (
-                  <TimeSlots slots={slots} value={time} onChange={setTime} legend={`Hora de inicio · ${format(toDate(date), "d 'de' MMMM", { locale: es })}`} />
+                  <TimeSlots
+                    slots={slots}
+                    value={time}
+                    onChange={(t) => {
+                      setTime(t);
+                      setNotice(null);
+                    }}
+                    legend={`Hora de inicio · ${format(toDate(date), "d 'de' MMMM", { locale: es })}`} />
                 )}
               </div>
             </div>
@@ -501,6 +527,20 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
 
         {step === 2 && pkg && (
           <div className="flex flex-col gap-6">
+            {date && time && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border-2 border-accent bg-accent-subtle p-4">
+                <div>
+                  <p className="text-sm text-text-muted">Revisa tu fecha</p>
+                  <p className="font-display text-lg text-text first-letter:uppercase">
+                    {format(toDate(date), "EEEE d 'de' MMMM 'de' yyyy", { locale: es })} · {time}
+                  </p>
+                  <p className="text-sm text-text">{guests} invitados</p>
+                </div>
+                <Button size="sm" variant="secondary" onClick={() => goTo(0)} disabled={submitting}>
+                  Cambiar
+                </Button>
+              </div>
+            )}
             <PriceSummary
               packageName={pkg.name}
               guests={guests}
@@ -558,8 +598,14 @@ export function BookingFlow({ business, packages, zones, initialGuests, today, f
                 <ArrowLeft aria-hidden className="size-5" />
                 Atrás
               </Button>
-              <Button size="lg" loading={submitting} onClick={submit}>
+              <Button size="lg" loading={submitting} onClick={submit} className="whitespace-normal text-left sm:text-center">
                 {depositCents > 0 && payMode === "now" ? "Ir a pagar el anticipo" : "Enviar solicitud"}
+                {date && time && (
+                  <span className="font-normal">
+                    {" "}
+                    · {format(toDate(date), "EEE d 'de' MMM", { locale: es })}, {time}
+                  </span>
+                )}
               </Button>
             </div>
           </div>
