@@ -14,6 +14,8 @@ Entorno: local; la app en `next dev` y una imitación de Mercado Pago y Resend (
 | Después de los arreglos de `/replica-entrepreneur` (12 casos nuevos) | Postgres 16 | **83 pasaron, 0 fallaron** |
 | Tercera ronda, después de la marca (9 casos nuevos) | memoria | Primera vuelta: 89 pasaron, 1 falló (límite de enlaces del ayudante en las pruebas, no un bug) y 1 caso nuevo descubrió BUG-009. Final: **90 pasaron, 0 fallaron**, 2 se saltaron |
 | Tercera ronda, después de la marca | Postgres 16 | **92 pasaron, 0 fallaron** |
+| Portada de lanzamiento (3 casos nuevos) | memoria | **93 pasaron, 0 fallaron**, 2 se saltaron (solo Postgres) |
+| Portada de lanzamiento | Postgres 16 | **95 pasaron, 0 fallaron** |
 
 Cómo correrlas:
 
@@ -151,6 +153,14 @@ Todas en `e2e/ronda3.spec.ts`.
   enlaces por hora (que funciona como debe).
 - **El arreglo:** F11-E1 ahora crea su propio ayudante desde Equipo. Las demás pruebas usan la
   sesión guardada del ayudante.
+
+## Portada de lanzamiento (`e2e/landing.spec.ts`)
+
+| caso | qué | tipo | pasos | esperado | auto | resultado |
+| --- | --- | --- | --- | --- | --- | --- |
+| L-H1 | Portada | feliz | Abrir la portada; abrir preguntas con clic y con Enter; llamada final | 5 promesas; respuestas con los ajustes reales; sin frases de prueba inventada; axe; la llamada final lleva a agendar | e2e | ✅ |
+| L-H2 | | ajustes | El dueño cambia el plazo de devolución a 10 días | La pregunta dice "al menos 10 días" | e2e | ✅ |
+| L-E1 | | celular | Portada a 390 px | 0 px de desborde; axe | e2e | ✅ |
 
 ## Lista manual (no se puede automatizar aquí)
 
