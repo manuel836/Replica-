@@ -10,7 +10,8 @@ import { monthStates, slotsFor } from "@/server/services/availability";
 import { clientIp } from "@/server/auth";
 import { verifyTurnstile } from "@/server/turnstile";
 import { verifyManageToken } from "@/server/tokens";
-import { bookingForm, dateStr, fieldErrors, timeStr } from "@/server/validation";
+import { sendLinksToCustomer } from "@/server/customer-email";
+import { bookingForm, dateStr, fieldErrors, timeStr, toMexicanE164 } from "@/server/validation";
 
 // Acciones del cliente. Cada una valida su entrada y, si toca una taquiza, el token del enlace.
 
@@ -134,5 +135,24 @@ export async function enviarResena(code: string, token: string, rating: number, 
   return run(async () => {
     const booking = await bookingFromLink(code, token);
     await bookings.submitReview(booking, Math.round(rating), comment.trim().slice(0, 1000));
+  });
+}
+
+/** "¿Perdiste el enlace de tu taquiza?" Siempre la misma respuesta (replica/fixes.md, FX5). */
+export async function recuperarEnlace(raw: { whatsapp: string; turnstileToken?: string | null }) {
+  const e164 = toMexicanE164(String(raw?.whatsapp ?? ""));
+  if (!e164) {
+    return { ok: false as const, error: "Revisa tu número.", code: "invalid", fields: { whatsapp: "Escribe los 10 dígitos de tu WhatsApp." } };
+  }
+  return run(async () => {
+    const ip = await clientIp();
+    if (!(await verifyTurnstile(raw.turnstileToken, ip))) {
+      throw new AppError("No pudimos verificar que no eres un robot. Recarga la página e intenta de nuevo.", "turnstile");
+    }
+    const db = store();
+    if (!(await db.hitRateLimit(`recover-ip:${ip}`, 3600, 10)) || !(await db.hitRateLimit(`recover-wa:${e164}`, 3600, 3))) {
+      throw new AppError("Ya lo intentaste varias veces. Espera una hora o escríbenos por WhatsApp.", "rate_limit");
+    }
+    await sendLinksToCustomer(e164);
   });
 }

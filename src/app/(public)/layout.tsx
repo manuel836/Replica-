@@ -17,12 +17,15 @@ export default async function PublicLayout({ children }: { children: ReactNode }
           <p>
             <span className="font-display font-extrabold text-brand">{business.name}</span> · {business.city}
           </p>
-          <nav aria-label="Pie de página" className="flex gap-4">
+          <nav aria-label="Pie de página" className="flex flex-wrap gap-x-4">
             <a href="/paquetes" className="min-h-11 content-center hover:text-on-ink focus-visible:outline-brand">
               Paquetes
             </a>
             <a href="/politicas" className="min-h-11 content-center hover:text-on-ink focus-visible:outline-brand">
               Políticas y preguntas
+            </a>
+            <a href="/t/recuperar" className="min-h-11 content-center hover:text-on-ink focus-visible:outline-brand">
+              Perdí mi enlace
             </a>
           </nav>
         </div>

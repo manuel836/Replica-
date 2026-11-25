@@ -170,3 +170,54 @@ test.describe("FX4 avisa a tus invitados", () => {
     await expect(page.getByRole("region", { name: "Avisa a tus invitados" })).toHaveCount(0);
   });
 });
+
+test.describe("FX5 recupera tu enlace sin códigos", () => {
+  test("FX5-H1 con correo: le llegan sus enlaces y funcionan; la respuesta es la misma para un número sin taquizas", async ({ page, browser }) => {
+    const email = `recupera${Date.now()}@correo.test`;
+    const phone = `753${String(Date.now()).slice(-7)}`;
+    const { code } = await bookTaquiza(page, { monthsAhead: 2, dayIndex: 22, email, phone });
+
+    const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const other = await ctx.newPage();
+    await other.goto("/t/DGT-ZZZZ?k=inventado");
+    await other.getByRole("link", { name: "Recuperar mi enlace" }).click();
+    await expect(other.getByRole("heading", { name: "¿Perdiste el enlace de tu taquiza?", level: 1 })).toBeVisible();
+    await a11y(other, "Recuperar enlace");
+    await other.waitForLoadState("networkidle");
+    await other.getByRole("button", { name: "Mandarme mi enlace" }).click();
+    await expect(other.getByText("Escribe los 10 dígitos de tu WhatsApp.")).toBeVisible();
+    await other.getByLabel("Tu WhatsApp").fill(phone);
+    await other.getByRole("button", { name: "Mandarme mi enlace" }).click();
+    await expect(other.getByRole("status").filter({ hasText: "Si ese número tiene taquizas próximas" })).toBeVisible();
+
+    const recoverMail = async () => (await mock.emails(email)).find((e) => /Tu enlace de/.test(e.subject));
+    await expect.poll(async () => (await recoverMail())?.text ?? "").toContain(code);
+    const mail = (await recoverMail())!;
+    const link = mail.text.match(new RegExp(`http://localhost:3100/t/${code}\\?k=\\S+`))![0];
+    await other.goto(link);
+    await expect(other.getByRole("heading", { name: "Tu taquiza", level: 1 })).toBeVisible();
+
+    // Un número que no existe recibe exactamente la misma respuesta.
+    await other.goto("/t/recuperar");
+    await other.waitForLoadState("networkidle");
+    await other.getByLabel("Tu WhatsApp").fill("7539999999");
+    await other.getByRole("button", { name: "Mandarme mi enlace" }).click();
+    await expect(other.getByRole("status").filter({ hasText: "Si ese número tiene taquizas próximas" })).toBeVisible();
+    await ctx.close();
+  });
+
+  test("FX5-N1 abuso: el 4.º intento con el mismo número en una hora se frena", async ({ browser }) => {
+    const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const p = await ctx.newPage();
+    const phone = `754${String(Date.now()).slice(-7)}`;
+    for (let i = 0; i < 4; i++) {
+      await p.goto("/t/recuperar");
+      await p.waitForLoadState("networkidle");
+      await p.getByLabel("Tu WhatsApp").fill(phone);
+      await p.getByRole("button", { name: "Mandarme mi enlace" }).click();
+      if (i < 3) await expect(p.getByText("Si ese número tiene taquizas próximas")).toBeVisible();
+    }
+    await expect(p.getByRole("alert").filter({ hasText: "Ya lo intentaste varias veces" })).toBeVisible();
+    await ctx.close();
+  });
+});

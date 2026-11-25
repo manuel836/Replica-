@@ -268,3 +268,46 @@ export async function notifyCustomer(
     console.error(`[correo al cliente] ${kind} falló: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
+
+/**
+ * "Perdí mi enlace": manda al correo del cliente los enlaces de sus taquizas próximas.
+ * No dice nada hacia afuera: quien llama siempre recibe la misma respuesta, exista o no el
+ * número, tenga o no correo (así nadie puede averiguar quién tiene taquizas).
+ */
+export async function sendLinksToCustomer(whatsappE164: string): Promise<void> {
+  try {
+    const db = store();
+    const business = await db.getBusiness();
+    const customer = await db.findCustomerByWhatsapp(business.id, whatsappE164);
+    if (!customer?.email || customer.anonymizedAt) return;
+    const today = todayLocal(business.timezone);
+    const upcoming = (await db.listBookings(business.id, { customerId: customer.id, from: today }))
+      .filter((b) => ["requested", "awaiting_payment", "proposed", "confirmed"].includes(b.status))
+      .sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+    if (upcoming.length === 0) return;
+    const base = await appBase();
+    const tz = business.timezone;
+    const lines = upcoming.map(
+      (b) => `${cap(formatDateLong(b.eventDate))}, ${localTime(b.startAt, tz)} (${b.code}): ${base}${managePath(b)}`,
+    );
+    const name = customer.name.split(/\s+/)[0] || customer.name;
+    const body = layout({
+      title: upcoming.length === 1 ? "El enlace de tu taquiza" : "Los enlaces de tus taquizas",
+      paragraphs: [
+        `Hola, ${name}. Nos pediste ${upcoming.length === 1 ? "el enlace de tu taquiza" : "los enlaces de tus taquizas"}:`,
+        ...lines,
+        "Con el enlace puedes ver, cambiar o cancelar. No lo compartas.",
+      ],
+      button: { label: "Ver mi taquiza", url: `${base}${managePath(upcoming[0])}` },
+      footer: `Si no lo pediste tú, ignora este correo: nadie más lo recibió.${business.email ? " Si tienes dudas, responde a este correo." : ""}`,
+    });
+    await sendEmail(business.id, {
+      to: customer.email,
+      subject: `Tu enlace de ${business.name}`,
+      ...body,
+      replyTo: business.email ?? undefined,
+    });
+  } catch (e) {
+    console.error(`[recuperar enlace] falló: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}

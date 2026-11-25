@@ -55,8 +55,20 @@ export default async function ManagePage({
   if (!d) {
     return (
       <div className="mx-auto w-full max-w-flow px-4 py-12">
-        <EmptyState as="h1" icon={Link2Off} title="Este enlace no funciona" action={<ButtonLink href="/">Ir al inicio</ButtonLink>}>
-          Puede que esté incompleto o que lo hayamos cambiado. Pídenos el enlace actualizado por WhatsApp.
+        <EmptyState
+          as="h1"
+          icon={Link2Off}
+          title="Este enlace no funciona"
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <ButtonLink href="/t/recuperar">Recuperar mi enlace</ButtonLink>
+              <ButtonLink href="/" variant="secondary">
+                Ir al inicio
+              </ButtonLink>
+            </div>
+          }
+        >
+          Puede que esté incompleto o que lo hayamos cambiado. Con tu WhatsApp te mandamos el enlace actualizado.
         </EmptyState>
       </div>
     );
