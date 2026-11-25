@@ -1,7 +1,12 @@
 # Publicar: D' Garden Tacos
 
 Fecha: 2026-11-25. Commit revisado: la punta de la rama `claude/replica-skill-plugin-install-et8rcf`
-(ver el commit de este archivo). **Visto bueno del dueño: todavía no.**
+(ver el commit de este archivo).
+
+**Visto bueno del dueño (2026-11-25):** preparar el pull request. Se creó `main` en GitHub desde el
+primer commit, con tu permiso, y se abrió el
+[pull request #1](https://github.com/manuel836/Replica-/pull/1). **Publicar al público: todavía
+no.**
 
 Nada sale en vivo sin tu "sí". Tú creas las cuentas, compras el dominio y pegas las llaves (en
 Vercel, nunca en el chat). Aquí van los resultados de la revisión y los pasos exactos.
@@ -114,9 +119,9 @@ No hay Google ni Apple: el panel entra con un enlace al correo. No hay URIs que 
 Cárdenas).
 
 - [ ] **Conectar el repositorio:** en Vercel, New Project → importa `manuel836/Replica-`.
-- [ ] **Llevar el código a `main`:** hoy vive en la rama `claude/replica-skill-plugin-install-et8rcf`.
-  Se abre un pull request y lo apruebas. Después, `main` publica producción y cada pull request
-  tiene su vista previa.
+- [ ] **Llevar el código a `main`:** el
+  [pull request #1](https://github.com/manuel836/Replica-/pull/1) está abierto; al aprobarlo, `main`
+  publica producción y cada pull request tiene su vista previa.
 - [ ] **Comprar el dominio** en tu registrador, por ejemplo `dgardentacos.com` (`brand.md`), y
   agregarlo en Vercel → Settings → Domains.
 
@@ -167,7 +172,8 @@ de inicio" (ya tiene el ícono). Sin cuentas de Apple ni Google Play.
 
 ## Pendiente de ti para seguir
 
-1. **El visto bueno** para preparar el pull request a `main`.
+1. **Revisar y aprobar el [pull request #1](https://github.com/manuel836/Replica-/pull/1).**
+   Después, en GitHub → Settings → Branches, pon `main` como rama principal.
 2. Las cuentas: Vercel, Supabase (proyecto de producción), Resend, Mercado Pago y el dominio.
 3. Tus datos, fotos y descripción en el panel.
 
