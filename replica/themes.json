@@ -1,0 +1,464 @@
+{
+  "_about": "Temas para reseñas de una app de reservaciones (OpenTable), en inglés y español. Basado en el themes.json de replica-entrepreneur, con los temas propios de reservaciones: reservación que no aparece, cargos por no llegar, disponibilidad, puntos, lo que paga el restaurante, cambiar o cancelar. Expresiones regulares de Python, sin distinguir mayúsculas.",
+  "request_patterns": [
+    "\\bi wish\\b",
+    "\\bplease (add|bring|make|let|allow|fix)\\b",
+    "\\bwould be (nice|great|good|helpful)\\b",
+    "\\bwould love\\b",
+    "\\bneeds? (a|an|the|to|more)\\b",
+    "\\bno way to\\b",
+    "\\bthere'?s no (way|option)\\b",
+    "\\b(can'?t|cannot|unable to) (even )?(add|change|edit|set|choose|export|import|customi[sz]e|connect|undo|delete|turn off|modify|cancel|filter|sort|search)\\b",
+    "\\b(missing|lacks|lacking)\\b",
+    "\\bdoesn'?t (have|support|let|allow)\\b",
+    "\\bif only\\b",
+    "\\bfeature request\\b",
+    "\\bwhy (can'?t|isn'?t|doesn'?t)\\b",
+    "\\bojal[aá]\\b",
+    "\\bdeber[ií]an\\b",
+    "\\b(ser[ií]a|estar[ií]a) (bueno|genial|bien|padre|excelente|[uú]til)\\b",
+    "\\bme gustar[ií]a\\b",
+    "\\bfalta(n|r[ií]a)?\\b",
+    "\\bno (hay|tiene) (opci[oó]n|forma|manera)\\b",
+    "\\bpor favor (agreguen|pongan|a[nñ]adan|mejoren|arreglen)\\b"
+  ],
+  "themes": [
+    {
+      "id": "reservation_failed",
+      "label": "La reservación no aparece, no la respetan o se cae",
+      "kind": "complaint",
+      "patterns": [
+        "\\b(didn'?t|did not|don'?t|does not|doesn'?t) have (my|our|the|a) (reservation|booking|table)\\b",
+        "\\bno record of (my|our|the) (reservation|booking)\\b",
+        "\\breservations? (was |were )?(not|never) (there|honou?red|found|confirmed|in (the|their) system)\\b",
+        "\\bshowed up\\b",
+        "\\bwhen (we|i) (arrived|got there)\\b",
+        "\\b(restaurant|they) cancel(l)?ed (my|our|the) (reservation|booking)\\b",
+        "\\bno (ten[ií]an|aparec[ií]a|encontraron) (mi|nuestra|la) reserv",
+        "\\bcancelaron (mi|nuestra|la) reserv",
+        "\\bllegamos\\b",
+        "\\bal llegar\\b",
+        "\\bno ten[ií]a reservaci[oó]n\\b",
+        "\\bno (me )?(aceptaron|respetaron) (la|las|mi|mis) reserv",
+        "\\breservas no caen\\b",
+        "\\bninguna estaba registrada\\b",
+        "\\b(lugar|restaurante) (estaba )?cerrado\\b",
+        "\\bestaba cerrado\\b",
+        "\\b(lost|lose) (our|my) reservation\\b",
+        "\\bfake confirmations\\b",
+        "\\bfind it closed\\b",
+        "\\b(dining area|place|restaurant) was closed\\b",
+        "\\bnot (being )?honou?red\\b",
+        "\\bgave it away\\b",
+        "\\bgiving our table\\b",
+        "\\bover ?book",
+        "\\bcancel(l)?ed for no reason\\b",
+        "\\bcancelan sin\\b",
+        "\\bcancelado sin\\b",
+        "\\bno hay disponibilidad\\b",
+        "\\bdid not properly check my reservation\\b",
+        "\\bno la tom[oó] en cuenta\\b",
+        "\\bni ca la tomo en cuenta\\b"
+      ]
+    },
+    {
+      "id": "silent_change",
+      "label": "Cambia la fecha, la hora o las personas sin avisar",
+      "kind": "complaint",
+      "patterns": [
+        "\\bchang(e|es|ed) (days|dates|the date|my time|times|the amount of people)\\b",
+        "\\bchanged (our|my) .{0,40}reservation\\b",
+        "\\bsilently reset",
+        "\\bwrong dates\\b",
+        "\\bnot booking for the day\\b",
+        "\\bme la cambia\\b",
+        "\\bchanged dates without notification\\b",
+        "\\bit also changed my time\\b",
+        "\\bchanged my time\\b"
+      ]
+    },
+    {
+      "id": "fees_deposits",
+      "label": "Cargos, depósitos y tarjeta retenida",
+      "kind": "complaint",
+      "patterns": [
+        "\\bno.?show (fee|charge|penalt)",
+        "\\bcancell?ation (fee|charge|penalt)",
+        "\\bcharged (me|us|my|a fee|\\$)",
+        "\\bdeposit",
+        "\\b(hold|charge) on (my|the) (credit )?card\\b",
+        "\\bcredit card (required|hold|info|number|details)\\b",
+        "\\bpre.?pa(y|id|yment)\\b",
+        "\\bme (cobraron|cobr[oó])\\b",
+        "\\bcargo(s)?\\b",
+        "\\bdep[oó]sito\\b",
+        "\\banticipo\\b",
+        "\\btarjeta\\b",
+        "\\bretenci[oó]n\\b",
+        "\\bservice charge\\b",
+        "\\bpay for a reservation\\b",
+        "\\bpenalty\\b",
+        "\\bm[eé]todo de pago\\b",
+        "\\bpending on our bank\\b",
+        "\\bcharging people\\b",
+        "\\bme va a cobrar\\b",
+        "\\bfee\\b"
+      ]
+    },
+    {
+      "id": "availability",
+      "label": "Sin horarios, disponibilidad engañosa, lista de espera",
+      "kind": "complaint",
+      "patterns": [
+        "\\bno (availability|times|tables|slots|reservations) (available|left|at all)?\\b",
+        "\\bnothing available\\b",
+        "\\bfully booked\\b",
+        "\\bnotify me\\b",
+        "\\bwait ?list\\b",
+        "\\bavailab(le|ility) (is|was|are) (wrong|incorrect|not accurate|inaccurate)\\b",
+        "\\bshows? (available|availability)\\b",
+        "\\bsin disponibilidad\\b",
+        "\\bno hay (lugar|lugares|mesas?|disponibilidad|horarios?)\\b",
+        "\\blista de espera\\b"
+      ]
+    },
+    {
+      "id": "modify_cancel",
+      "label": "Cambiar o cancelar la reservación cuesta trabajo",
+      "kind": "complaint",
+      "patterns": [
+        "\\b(can'?t|cannot|couldn'?t|unable to|no way to) (modify|change|cancel|edit|update) (my|the|a|our)? ?(reservation|booking|party size|time)?\\b",
+        "\\bmodify (my|the|a) (reservation|booking)\\b",
+        "\\bparty size\\b",
+        "\\bno (pude|puedo|pudimos|se puede) (cancelar|modificar|cambiar)\\b",
+        "\\bcambiar (la|mi) reserv",
+        "\\bcan'?t update my reservation\\b",
+        "\\bcancel (&|and) (then )?re-?(reserve|do)\\b",
+        "\\bno deja hacer la correcci[oó]n\\b",
+        "\\bwon'?t allow changes\\b",
+        "\\bwouldn'?t let us cancel\\b",
+        "\\bhave you cancel and redo\\b"
+      ]
+    },
+    {
+      "id": "forced_account",
+      "label": "Obliga a crear cuenta o a dar datos personales",
+      "kind": "complaint",
+      "patterns": [
+        "\\bcreate an account\\b",
+        "\\bdo not want an account\\b",
+        "\\binvasive\\b",
+        "\\bobligan a introducir\\b",
+        "\\bdatos personales\\b",
+        "\\bpersonal information\\b",
+        "\\bas guest\\b",
+        "\\bcrear (una )?cuenta\\b"
+      ]
+    },
+    {
+      "id": "points",
+      "label": "Puntos y recompensas",
+      "kind": "complaint",
+      "patterns": [
+        "\\bpoints?\\b",
+        "\\brewards?\\b",
+        "\\bdining (points|rewards|dollars)\\b",
+        "\\bpuntos\\b",
+        "\\brecompensas?\\b"
+      ]
+    },
+    {
+      "id": "restaurant_cost",
+      "label": "Lo que le cobra al restaurante (por comensal, comisiones)",
+      "kind": "complaint",
+      "patterns": [
+        "\\bper (cover|head|diner|person|reservation|seat)\\b",
+        "\\$\\d+ ?/ ?head\\b",
+        "\\bcommission\\b",
+        "\\btakes? a cut\\b",
+        "\\bservice fee\\b",
+        "\\bcharg(es|ing) (them|restaurants|the restaurant|partner)",
+        "\\blower their\\b",
+        "\\bpaying too much\\b",
+        "\\bcomisi[oó]n\\b",
+        "\\bnot worth the expense\\b",
+        "\\bmonopoly\\b",
+        "\\bhow much money does open table take\\b"
+      ]
+    },
+    {
+      "id": "lockin",
+      "label": "El restaurante no es dueño de sus clientes (datos, encierro)",
+      "kind": "complaint",
+      "patterns": [
+        "\\block.?in\\b",
+        "\\bowns? (this|the|their) (data|information|customers?)\\b",
+        "\\bdiner data\\b",
+        "\\bcustomer (data|control)\\b",
+        "\\bbelieves they own\\b",
+        "\\bredirected\\b",
+        "\\badwords\\b",
+        "\\bmiddle ?man\\b",
+        "\\bsell it on the side\\b"
+      ]
+    },
+    {
+      "id": "search_location",
+      "label": "Búsqueda y ubicación equivocadas, anuncios primero",
+      "kind": "complaint",
+      "patterns": [
+        "\\blocation\\b",
+        "\\bubicaci[oó]n\\b",
+        "\\blocalizaci[oó]n\\b",
+        "\\bsponsored\\b",
+        "\\bpaid advertisers\\b",
+        "\\bsuggestions in\\b",
+        "\\bdifferent state\\b",
+        "\\bsearch function\\b"
+      ]
+    },
+    {
+      "id": "pricing",
+      "label": "Precio y pagos dentro de la app",
+      "kind": "complaint",
+      "patterns": [
+        "\\bexpensive\\b",
+        "\\boverpriced\\b",
+        "\\bpric(e|es|ey|ing)\\b",
+        "\\bpaywall",
+        "\\bsubscription\\b",
+        "\\bnot worth\\b",
+        "\\bcaro\\b",
+        "\\bprecios?\\b"
+      ]
+    },
+    {
+      "id": "billing",
+      "label": "Cobros y reembolsos",
+      "kind": "complaint",
+      "patterns": [
+        "\\brefund",
+        "\\bhidden (fee|charge)",
+        "\\bbilling\\b",
+        "\\bscam\\b",
+        "\\breembolso",
+        "\\bcobro"
+      ]
+    },
+    {
+      "id": "bugs",
+      "label": "Fallas y errores",
+      "kind": "complaint",
+      "patterns": [
+        "\\bcrash(es|ed|ing)?\\b",
+        "\\bbugs?\\b",
+        "\\bbuggy\\b",
+        "\\bglitch",
+        "\\bfreez(e|es|ing)\\b",
+        "\\bbroken\\b",
+        "\\b(doesn'?t|does not|stopped|won'?t) (work|load|open)",
+        "\\bnot working\\b",
+        "\\berror\\b",
+        "\\bno funciona\\b",
+        "\\bfalla",
+        "\\bse (cierra|traba|congela)\\b"
+      ]
+    },
+    {
+      "id": "performance",
+      "label": "Lenta o pesada",
+      "kind": "complaint",
+      "patterns": [
+        "\\bslow\\b",
+        "\\blag(gy|s)?\\b",
+        "\\bloading\\b",
+        "\\btakes forever\\b",
+        "\\bsluggish\\b",
+        "\\blent[ao]\\b",
+        "\\btarda\\b"
+      ]
+    },
+    {
+      "id": "ux",
+      "label": "Confusa o difícil de usar",
+      "kind": "complaint",
+      "patterns": [
+        "\\bconfus",
+        "\\bhard to (use|find|navigate|understand|read)\\b",
+        "\\bcomplicated\\b",
+        "\\bcluttered\\b",
+        "\\bunintuitive\\b",
+        "\\bnot intuitive\\b",
+        "\\bclunky\\b",
+        "\\btoo many (steps|clicks|taps)\\b",
+        "\\bcan'?t find\\b",
+        "\\bfilters?\\b",
+        "\\bdif[ií]cil\\b",
+        "\\bcomplicad"
+      ]
+    },
+    {
+      "id": "support",
+      "label": "Soporte que no responde",
+      "kind": "complaint",
+      "patterns": [
+        "\\bcustomer (service|support)\\b",
+        "\\bsupport (team|is|was)\\b",
+        "\\bno (response|reply)\\b",
+        "\\bnever (replied|responded|heard back)\\b",
+        "\\bticket\\b",
+        "\\bchat ?bot\\b",
+        "\\b(servicio|atenci[oó]n) al cliente\\b",
+        "\\bsoporte\\b",
+        "\\bno humans\\b",
+        "\\bcall an agent\\b",
+        "\\bnadie me contesta\\b",
+        "\\bno (los )?contesta(n)?\\b",
+        "\\bai bot\\b",
+        "\\bno help at all\\b",
+        "\\bno resolution\\b",
+        "\\bresponsibility\\b"
+      ]
+    },
+    {
+      "id": "account",
+      "label": "Cuenta, inicio de sesión y verificación",
+      "kind": "complaint",
+      "patterns": [
+        "\\blog ?(in|out)\\b",
+        "\\blogged out\\b",
+        "\\bsign ?in\\b",
+        "\\bpassword\\b",
+        "\\blocked out\\b",
+        "\\bverif(y|ication)\\b",
+        "\\bphone number\\b",
+        "\\bdelete (my )?account\\b",
+        "\\bcontrase[nñ]a\\b",
+        "\\biniciar sesi[oó]n\\b",
+        "\\bc[oó]digo\\b",
+        "\\bmi cuenta\\b",
+        "\\bauthentication\\b",
+        "\\bc[oó]digos?\\b",
+        "\\bclave\\b",
+        "\\bfirmarme\\b",
+        "\\bno (me deja|puedo) (entrar|accesar|acceder|iniciar)\\b",
+        "\\bsesi[oó]n\\b",
+        "\\blogins?\\b"
+      ]
+    },
+    {
+      "id": "notifications",
+      "label": "Notificaciones, correos y spam",
+      "kind": "complaint",
+      "patterns": [
+        "\\bnotification",
+        "\\bspam",
+        "\\btoo many (emails|texts|notifications)\\b",
+        "\\bemails\\b",
+        "\\breminders?\\b",
+        "\\bnotificaci",
+        "\\bcorreos\\b",
+        "\\bask(ing)? (me )?(for|to write|to rate) (a )?review",
+        "\\bstop asking\\b",
+        "\\bdejen de preguntar\\b",
+        "\\bconfirmaci[oó]n a cada hora\\b",
+        "\\basked 10 times\\b",
+        "\\bunsolicited emails\\b",
+        "\\brate the app\\b"
+      ]
+    },
+    {
+      "id": "updates",
+      "label": "Una actualización la empeoró",
+      "kind": "complaint",
+      "patterns": [
+        "\\b(new|latest|recent|last) (update|version|design)\\b",
+        "\\bredesign",
+        "\\bused to be\\b",
+        "\\bbring back\\b",
+        "\\bsince the update\\b",
+        "\\bactualizaci[oó]n\\b"
+      ]
+    },
+    {
+      "id": "coverage",
+      "label": "Pocos restaurantes, idioma o país",
+      "kind": "complaint",
+      "patterns": [
+        "\\b(pocos|muy pocos|no hay muchos) restaurantes\\b",
+        "\\ben espa[nñ]ol\\b",
+        "\\bidioma\\b",
+        "\\bnot (available|many restaurants) in (my|your|this) (city|area|country|town)\\b",
+        "\\bfew restaurants\\b",
+        "\\bmi ciudad\\b"
+      ]
+    },
+    {
+      "id": "privacy",
+      "label": "Privacidad y permisos",
+      "kind": "complaint",
+      "patterns": [
+        "\\bprivacy\\b",
+        "\\btracking\\b",
+        "\\bsell(s|ing)? (my )?data\\b",
+        "\\bpermissions?\\b",
+        "\\bcreepy\\b",
+        "\\bprivacidad\\b"
+      ]
+    },
+    {
+      "id": "integrations",
+      "label": "Integraciones y exportar",
+      "kind": "request",
+      "patterns": [
+        "\\bintegrat",
+        "\\bgoogle (calendar|sheets|maps)\\b",
+        "\\bapple (wallet|maps|calendar)\\b",
+        "\\bapi\\b",
+        "\\bexport\\b",
+        "\\bcsv\\b",
+        "\\bcalendario\\b"
+      ]
+    },
+    {
+      "id": "platforms",
+      "label": "Plataformas y versión web",
+      "kind": "request",
+      "patterns": [
+        "\\boffline\\b",
+        "\\bandroid\\b",
+        "\\bipad\\b",
+        "\\bapple watch\\b",
+        "\\bweb (version|site)\\b",
+        "\\bwidget\\b"
+      ]
+    },
+    {
+      "id": "customisation",
+      "label": "Personalizar y controlar",
+      "kind": "request",
+      "patterns": [
+        "\\bcustomi[sz]",
+        "\\bdark mode\\b",
+        "\\bsettings?\\b",
+        "\\boption to\\b",
+        "\\bfavorit"
+      ]
+    },
+    {
+      "id": "collaboration",
+      "label": "Compartir con otras personas",
+      "kind": "request",
+      "patterns": [
+        "\\bshar(e|ing) (the|my|a) (reservation|booking)\\b",
+        "\\binvite (friends|guests|others)\\b",
+        "\\bsplit\\b",
+        "\\bcompartir\\b",
+        "\\bcompartir\\b",
+        "\\bwhatsapp\\b",
+        "\\bshare\\b",
+        "\\binvitation\\b"
+      ]
+    }
+  ]
+}

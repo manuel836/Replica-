@@ -1,0 +1,15 @@
+{
+  "_about": "Lo del original que no debe aparecer en el sistema de D' Garden Tacos. Lo usan sweep.py (replica-brand), listing.py (replica-launch) y replica-deploy. El rojo de OpenTable viene de conocimiento general (confianza media); no se pudo leer su sitio.",
+  "name": "D' Garden Tacos",
+  "avoid": ["OpenTable", "Open Table"],
+  "domains": ["opentable.com", "opentable.com.mx", "otstatic.com"],
+  "colors": ["#DA3743"],
+  "palette": {
+    "ink": "#141110",
+    "brand": "#f2bd6c",
+    "bg": "#fbf7f0",
+    "surface": "#ffffff",
+    "text": "#1b1714",
+    "accent_text": "from replica/design/tokens.json"
+  }
+}

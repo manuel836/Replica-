@@ -1,0 +1,37 @@
+  AAA   16.68:1  text                     on bg                   
+  AAA   17.81:1  text                     on surface              
+  AAA   15.16:1  text                     on surface-muted        
+  AAA   15.18:1  text                     on accent-subtle        
+  AA     6.66:1  text-muted               on bg                   
+  AAA    7.11:1  text-muted               on surface              
+  AA     6.05:1  text-muted               on surface-muted        
+  AA     5.84:1  text-muted               on neutral-subtle       
+  AAA   17.60:1  on-ink                   on ink                  
+  AAA   10.34:1  on-ink-muted             on ink                  
+  AAA   10.98:1  brand                    on ink                  
+  AAA   10.41:1  on-accent                on accent               
+  AAA    8.65:1  on-accent                on accent-hover         
+  AA     5.93:1  accent-text              on bg                   
+  AA     6.33:1  accent-text              on surface              
+  AA     5.40:1  accent-text              on accent-subtle        
+  AA     6.57:1  on-danger                on danger               
+  AAA    8.66:1  on-danger                on danger-hover         
+  AA     6.16:1  danger                   on bg                   
+  AA     6.57:1  danger                   on surface              
+  AA     5.75:1  danger                   on danger-subtle        
+  AA     6.54:1  success                  on bg                   
+  AA     6.98:1  success                  on surface              
+  AA     6.11:1  success                  on success-subtle       
+  AA     5.93:1  warning                  on surface              
+  AA     5.36:1  warning                  on warning-subtle       
+  AAA    8.29:1  on-whatsapp              on whatsapp             
+  AA     6.37:1  on-whatsapp              on whatsapp-hover       
+  PASS   3.97:1  border-input             on surface              ui
+  PASS   3.72:1  border-input             on bg                   ui
+  PASS   5.93:1  focus                    on bg                   ui
+  PASS   6.33:1  focus                    on surface              ui
+  PASS   3.70:1  focus                    on accent               ui
+  PASS  10.98:1  brand                    on ink                  ui
+  PASS   5.93:1  warning                  on surface              ui
+
+  35 pairs, 0 failing AA

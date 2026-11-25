@@ -1,0 +1,22 @@
+{
+  "_about": "D' Garden Tacos no tiene app en App Store ni Google Play: el sistema es una página web. listing.py revisa listados de tiendas y aquí termina con 'no app_store or google_play section found'; no se inventó un listado de tienda para hacerlo pasar. En su lugar van los textos para donde te buscan tus clientes. Los límites marcados 'revisar' no se verificaron: confírmalos al publicar.",
+  "avoid": ["OpenTable", "Open Table"],
+  "perfiles": {
+    "google_business_profile": {
+      "_limite": "750 caracteres para la descripción (Google, revisar al publicar). Google no permite enlaces en la descripción: el sitio va en su campo propio.",
+      "description": "D' Garden Tacos lleva la plancha a tu fiesta en Lázaro Cárdenas, Michoacán: tacos hechos al momento para tus invitados. Agendas en línea: ves los días libres, eliges paquete e invitados y te confirma por WhatsApp el mismo equipo que llega a servir. Puedes apartar con anticipo con tarjeta o sin pagar en línea, y antes de pagar ves hasta qué día te devolvemos el anticipo completo. Sin cuentas ni contraseñas: tu taquiza vive en un enlace."
+    },
+    "facebook_intro": {
+      "_limite": "revisar al publicar (la presentación de la página es corta)",
+      "text": "Taquizas a domicilio en Lázaro Cárdenas. Agenda en línea y te confirmamos por WhatsApp."
+    },
+    "instagram_bio": {
+      "_limite": "150 caracteres (revisar al publicar)",
+      "text": "Taquizas con plancha en tu fiesta 🌮 Lázaro Cárdenas, Mich. Te confirma el mismo equipo que llega a servir. Agenda aquí 👇"
+    },
+    "whatsapp_business": {
+      "_limite": "revisar al publicar",
+      "text": "Taquizas con plancha a domicilio en Lázaro Cárdenas, Michoacán. Agenda en línea con el enlace de este perfil o pregúntanos por aquí."
+    }
+  }
+}

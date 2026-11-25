@@ -1,0 +1,73 @@
+feature,area,priority,original,clone,notes
+"Página pública del negocio con fotos, descripción y botón Agendar",página pública,must,yes,yes,Equivale al perfil de restaurante de OpenTable (S01) · S01; fotos subidas desde Ajustes
+Lista de paquetes con precio por persona y mínimo de invitados,paquetes,must,yes,yes,Equivale al menú y a Experiences de OpenTable (S02) · Build: S01 y S02
+Elegir número de invitados,agendar,must,yes,yes,Equivale al selector de personas de OpenTable (S01 y S03) · Build: S01 y S03
+Calendario con días disponibles / pocos lugares / llenos / bloqueados,agendar,must,yes,yes,S03 · Build: S03; con aviso y botón si el mes ya no tiene fechas
+Elegir hora de inicio entre los horarios libres,agendar,must,yes,yes,Equivale a los botones de horario de OpenTable (S03) · Build: S03
+Agendar sin crear cuenta (solo nombre y WhatsApp),agendar,must,yes,yes,OpenTable deja reservar en web como invitado (conocimiento general; no verificado en esta sesión) · Build: S04
+Dirección del evento con referencias y enlace a mapa,agendar,must,no,partial,OpenTable no lo tiene: allí el cliente va al restaurante (S04) · Build: Dirección y referencias en S04; el enlace a Google Maps solo está en el panel (S12)
+Revisar que la dirección esté dentro de la zona de cobertura,agendar,should,no,partial,S04 contra las zonas de S16 · Build: El cliente elige su zona de una lista (S04); no se valida la dirección contra un mapa
+Tipo de evento y notas (alergias / peticiones),agendar,must,yes,yes,Equivale a la ocasión y las peticiones especiales de OpenTable (S04) · Build: S04
+Elegir complementos (aguas / tortillas a mano / salsas extra),agendar,could,no,no,La lista exacta la confirma D' Garden Tacos · Build: Tabla y precio preparados (addons); falta la pantalla
+Resumen con total estimado antes de confirmar,agendar,must,yes,yes,S05 · Build: S05
+Pagar anticipo en línea con tarjeta,pagos,must,yes,yes,Equivale a los depósitos y prepagos de OpenTable. Mercado Pago o Stripe se decide en /replica-architect (S05) · Backend: Mercado Pago Checkout Pro + webhook firmado; probado contra imitación de la API; falta prueba con credenciales TEST- del dueño
+Agendar sin pago en línea (pagar después),pagos,must,yes,yes,La taquiza queda pendiente hasta que el negocio confirme (S05) · Build: S05
+Pago en OXXO o transferencia SPEI desde el sitio,pagos,could,no,no,Depende del proveedor de pagos elegido · Build: Excluido del MVP: tarda más que el apartado de 30 min
+Pantalla de confirmación con código y estado,agendar,must,yes,yes,S06 · Build: S06
+Botón para mandar la solicitud al negocio por WhatsApp,avisos,must,no,yes,Enlace wa.me con el mensaje ya escrito. Gratis y sin aprobación de Meta (S06) · Build: S06; aparece cuando el dueño captura su WhatsApp en S17
+Agregar el evento al calendario del cliente (.ics / Google),agendar,should,yes,yes,S06 · Build: S06/S07 descarga .ics
+Ver mi taquiza desde un enlace privado sin cuenta,mi taquiza,must,yes,yes,"Equivale a gestionar la reservación en OpenTable (S07) · Build: S07; token derivado con HMAC, regenerable"
+Cambiar fecha / hora / invitados,mi taquiza,should,yes,yes,Vuelve a revisar disponibilidad (S08) · Build: S08; no se cuenta a sí misma al revisar lugar
+Cancelar mostrando la política de reembolso,mi taquiza,must,yes,yes,S07 · S07; reembolso real en Mercado Pago dentro del plazo
+Recordatorio por WhatsApp antes del evento,avisos,should,yes,partial,En el MVP sale como lista de pendientes con botón wa.me; automático solo con la API de WhatsApp Business · Build: S11 'Recordatorios de mañana' con botón wa.me; el recordatorio automático sale por correo a quien dejó su correo
+Avisos automáticos por WhatsApp (API de WhatsApp Business),avisos,could,yes,no,Requiere cuenta de Meta / plantillas aprobadas / costo por conversación. OpenTable lo hace por SMS y correo · Build: Requiere cuenta de Meta; después del MVP
+Página de políticas y preguntas frecuentes,página pública,should,yes,yes,"S09 · Build: S09; aviso de privacidad provisional, pendiente de revisión legal"
+Dejar reseña después del evento,reseñas,could,yes,yes,Solo clientes con evento completado (así lo hace OpenTable) (S19) · Build: S19
+Mostrar reseñas en la página pública,reseñas,could,yes,yes,"S01 · Build: S01, solo las que publica el dueño"
+Diseño responsivo (celular primero),general,must,yes,yes,Build: Probado a 390 y 1440 px sin desborde horizontal
+Sitio en español (es-MX) con precios en MXN,general,must,yes,yes,
+Inicio de sesión del dueño,admin,must,yes,yes,"S10 · Backend: enlace mágico de un solo uso por correo (Resend), sesiones revocables"
+Agenda por día / semana / mes con todas las taquizas,admin agenda,must,yes,yes,Equivale al libro de reservaciones de OpenTable (S11) · Build: S11 con vistas Lista (por día y estado) / Semana / Mes; días cerrados y bloqueados; lugares ocupados por día
+Filtrar por estado (pendientes / confirmadas / canceladas / completadas),admin agenda,must,yes,yes,S11 · Build: Pestañas Por responder / Próximas / Pasadas / Canceladas
+Ver el detalle de una taquiza,admin agenda,must,yes,yes,S12 · Build: S12
+Aceptar o rechazar una solicitud,admin agenda,must,yes,yes,Equivale a las solicitudes de eventos privados de OpenTable (S12) · Build: S12; el dueño puede forzar un conflicto de agenda
+Proponer otra fecha al cliente,admin agenda,should,yes,yes,S12 · Build: S12 y respuesta del cliente en S07
+Mensaje de WhatsApp ya escrito al cliente desde el detalle,avisos,must,no,yes,wa.me con plantilla según el estado (S12) · Build: S12; queda registrado en el historial
+Marcar anticipo o saldo como pagado (efectivo / transferencia),pagos,must,no,yes,S12 · Build: S12
+Reembolsar un anticipo pagado en línea,pagos,should,yes,yes,S12 por la API del proveedor de pagos · Backend: reembolso completo al rechazar o cancelar y parcial desde S12 (solo el dueño); idempotente; al cancelar se devuelve solo lo que falte
+Marcar la taquiza como completada o no realizada,admin agenda,should,yes,yes,S12 · Build: S12
+Notas internas en la taquiza,admin agenda,should,yes,yes,S12 · Build: S12
+Registrar a mano una taquiza que llegó por teléfono o Facebook,admin agenda,must,yes,yes,"Equivale a ""agregar reservación"" del panel del restaurante (S13) · Build: S13; con opción de forzar día lleno"
+"Correos al cliente: solicitud recibida, confirmación, cambios, cancelación, recordatorio y reseña",avisos,should,yes,yes,"OpenTable manda confirmación y recordatorio por correo (recon: confianza alta). Faltaba en la matriz; salió en /replica-diff · Build: solo si el cliente deja su correo (opcional); cola con reintentos; la respuesta llega al correo del negocio"
+Aviso al dueño de una solicitud nueva,avisos,must,yes,yes,Por correo; WhatsApp automático solo con la API · Backend: correo por Resend con reintentos (outbox). La notificación del navegador no se hizo
+Horario semanal de trabajo y horas de inicio,disponibilidad,must,yes,yes,Equivale a los turnos (shifts) de OpenTable (S14) · Build: S14
+Capacidad máxima de taquizas y de invitados por día,disponibilidad,must,yes,yes,Equivale al pacing y al máximo de comensales (S14) · Build: S14; más equipos simultáneos
+Anticipación mínima y máxima para agendar,disponibilidad,must,yes,yes,S14 · Build: S14
+Bloquear fechas (vacaciones / días festivos),disponibilidad,must,yes,yes,S14 · Build: S14; avisa si el día ya tiene taquizas
+Tiempo de traslado y montaje entre eventos,disponibilidad,should,no,yes,S14 · Build: S14
+Crear y editar paquetes y precios,paquetes,must,yes,yes,S15 · S15; con foto (Supabase Storage)
+Zonas de cobertura con cargo por traslado,cobertura,should,no,yes,S16 · Build: S16
+"Configurar anticipo (porcentaje o monto fijo, obligatorio u opcional)",ajustes,must,yes,yes,S17 · Build: S17
+Confirmación automática o manual,ajustes,should,yes,yes,S17 · Build: S17
+Política de cancelación configurable,ajustes,must,yes,yes,S17 · Build: S17
+Plantillas de mensajes de WhatsApp,ajustes,should,no,yes,S17 · Build: S17
+Lista de clientes con historial de taquizas,clientes,could,yes,yes,"Equivale a los perfiles de comensales de OpenTable (S18) · Build: S18; con búsqueda, notas y borrado de datos"
+Exportar taquizas a CSV,admin agenda,could,yes,yes,"Build: /admin/reportes: CSV del mes o de todas (solo el dueño), con BOM para Excel y protegido contra fórmulas"
+Segundo usuario (ayudante) con acceso limitado,admin,could,yes,yes,"Build: Roles y permisos en el servidor; pantalla Equipo (/admin/equipo, solo el dueño) para dar acceso con un correo de invitación y quitarlo (cierra sus sesiones)"
+Reporte de ventas por mes,reportes,could,yes,yes,"Build: /admin/reportes (solo el dueño): taquizas, vendido, invitados, cobrado, por cobrar y promedio, contra el mes anterior; por paquete; detalle por estado y origen"
+Buscar entre miles de restaurantes,búsqueda,could,yes,skip,Es la red de OpenTable; tu sistema es de un solo negocio
+Mapa y filtros por cocina / precio / zona,búsqueda,could,yes,skip,No aplica a un solo negocio
+Guías editoriales y recomendaciones,descubrimiento,could,yes,skip,Contenido propiedad de OpenTable
+Asistente con IA que recomienda restaurantes (Concierge),descubrimiento,could,yes,skip,No aplica con un solo negocio
+Programa de puntos y recompensas,lealtad,could,yes,skip,Fuera del núcleo; se puede reconsiderar más adelante
+Alertas de lugar liberado (Notify me),agendar,could,yes,skip,Poco útil con 1 o 2 taquizas por día; reconsiderar si la agenda se llena
+Plano de mesas y asignación de mesas,admin,could,yes,skip,La taquiza es a domicilio: no hay mesas
+Apps nativas iOS/Android y widget de pantalla de inicio,general,could,yes,skip,Se eligió web responsiva
+Reseñas de comensales de OpenTable,reseñas,could,yes,skip,Son datos de OpenTable; las reseñas propias se juntan desde cero
+Integraciones con punto de venta y socios,integraciones,could,yes,skip,Acuerdos comerciales de OpenTable
+Fecha y hora escritas en el botón final; nunca se cambia el horario sin decirlo,agendar,should,no,yes,"Build: paso 3 con la fecha y el año en grande y botón con día y hora; aviso si el día o la hora dejan de estar libres al cambiar invitados · replica-entrepreneur FX1: OpenTable cambia fecha u hora sin avisar (8 reseñas, 2 fuentes) y reservaciones confirmadas que no existen (31, 2). Ver replica/fixes.md"
+"Motivo obligatorio al rechazar o cancelar, con aviso inmediato y opción de proponer otra fecha",admin agenda,should,no,partial,"Build: motivo obligatorio (cliente y servidor) con 3 sugerencias de un toque; el cliente lo ve en su enlace y en el correo; el diálogo de rechazar sugiere Proponer otra fecha. Falta: proponer otra fecha para una taquiza ya confirmada · replica-entrepreneur FX2: cancelaciones sin explicación (tema de 31 reseñas, 2 fuentes). Ver replica/fixes.md"
+Anticipo claro: monto y fecha límite exactos para el reembolso en el resumen y en Mi taquiza,pagos,should,no,yes,"Build: S05, S07, diálogo de cancelar y correos de confirmación y de anticipo pendiente dicen el día exacto y el monto · replica-entrepreneur FX3: cargos, depósitos y tarjeta retenida (21 reseñas, 3 fuentes). Ver replica/fixes.md"
+Compartir la invitación con los invitados por WhatsApp (sin el enlace privado),mi taquiza,should,no,yes,"Build: S06/S07 cuando está confirmada: Mandar por WhatsApp (elige a quién) y Copiar texto, con fecha, hora, dirección y mapa · replica-entrepreneur FX4: piden compartir por WhatsApp (2 reseñas, delgado; tema compartir 7 reseñas, 2 fuentes). Trabajo central del anfitrión"
+Recuperar el enlace de mi taquiza sin cuenta ni códigos,mi taquiza,could,no,yes,"Build: /t/recuperar (enlazada desde el enlace inválido y el pie de página): con su WhatsApp le llegan sus enlaces al correo; la respuesta es igual exista o no; límite por número y por conexión; si no dejó correo, botón para pedirlo por WhatsApp · replica-entrepreneur FX5: cuenta y códigos que no sirven (19 reseñas, 2 fuentes, sobre todo México). Ver replica/fixes.md"
+Enlace de agendar con código QR y texto listo para redes en el panel,admin,could,no,yes,"Build: /admin/compartir (dueño y ayudantes): enlace, QR para imprimir (SVG descargable) y 3 textos para Facebook, Instagram y WhatsApp · replica-entrepreneur FX6: lo que paga el restaurante por comensal (11 reseñas, 3 fuentes) y encierro (delgado). Ver replica/fixes.md"
