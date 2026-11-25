@@ -1,4 +1,4 @@
-import { HELPER, OWNER_STATE, a11y, bookTaquiza, bookingIdByCode, emailLogin, expect, mock, test } from "./helpers";
+import { HELPER_STATE, OWNER_STATE, a11y, bookTaquiza, bookingIdByCode, expect, mock, test } from "./helpers";
 
 // Reembolsos del anticipo desde el detalle de la taquiza (S12).
 
@@ -61,10 +61,8 @@ test.describe("S12 reembolsos", () => {
 
   test("S12-N1 el ayudante no ve el botón de reembolso", async ({ page, browser, newWatchedPage }) => {
     const { code } = await bookTaquiza(page, { monthsAhead: 2, dayIndex: 16, payNow: true });
-    // Sesión nueva: F11-E1 cierra las sesiones guardadas del ayudante.
-    const ctx = await browser.newContext();
+    const ctx = await browser.newContext({ storageState: HELPER_STATE });
     const helper = await newWatchedPage(ctx);
-    await emailLogin(helper, HELPER);
     await helper.goto(`/admin/t/${await bookingIdByCode(helper, code)}`);
     await expect(helper.getByText(/^Pagado:/)).toContainText("Pagado: $1,800 ");
     await expect(helper.getByRole("button", { name: "Reembolsar parte del anticipo" })).toHaveCount(0);

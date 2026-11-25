@@ -12,6 +12,8 @@ Entorno: local; la app en `next dev` y una imitación de Mercado Pago y Resend (
 | Después de `/replica-build` (16 casos nuevos) | Postgres 16 | **71 pasaron, 0 fallaron** |
 | Después de los arreglos de `/replica-entrepreneur` (12 casos nuevos) | memoria | **81 pasaron, 0 fallaron**, 2 se saltaron (solo Postgres) |
 | Después de los arreglos de `/replica-entrepreneur` (12 casos nuevos) | Postgres 16 | **83 pasaron, 0 fallaron** |
+| Tercera ronda, después de la marca (9 casos nuevos) | memoria | Primera vuelta: 89 pasaron, 1 falló (límite de enlaces del ayudante en las pruebas, no un bug) y 1 caso nuevo descubrió BUG-009. Final: **90 pasaron, 0 fallaron**, 2 se saltaron |
+| Tercera ronda, después de la marca | Postgres 16 | **92 pasaron, 0 fallaron** |
 
 Cómo correrlas:
 
@@ -126,6 +128,29 @@ Todas en `e2e/fx-confianza.spec.ts`.
 | FX5-N1 | | abuso | 4 intentos con el mismo número | El 4.º se frena | e2e | ✅ |
 | FX6-H1 | Comparte tu página | feliz | Menú → Compartir; descargar QR; copiar un texto; celular | Enlace, QR en SVG para descargar, textos con la ciudad y el enlace; 0 px de desborde; axe | e2e | ✅ |
 | FX6-N1 | | sin sesión | QR y página sin sesión | 401 y a la página de entrar | e2e | ✅ |
+
+## Tercera ronda: la marca y los bordes de las pantallas nuevas
+
+Todas en `e2e/ronda3.spec.ts`.
+
+| caso | qué | tipo | pasos | esperado | auto | resultado |
+| --- | --- | --- | --- | --- | --- | --- |
+| R3-B1 | Marca | feliz | Abrir la portada; pedir el favicon, el ícono de iPhone y la imagen para compartir | Los tres responden 200 con su tipo; están en el `<head>` con su texto alternativo | e2e | ✅ |
+| R3-B2 | Voz | feliz | Portada y confirmación de una taquiza pagada | Se ve la promesa; no aparece "Te esperamos" | e2e | ✅ |
+| R3-B3 | Nombre de 60 caracteres | texto muy largo | Nombre de negocio de 60 caracteres; portada y agendar a 390 px; imagen para compartir | 0 px de desborde; la imagen sale y su aro sigue redondo | e2e | ✅ (tras BUG-009) |
+| R3-E1 | Reembolso parcial | doble clic | Doble clic en "Reembolsar" con $300 | Un solo reembolso; "Pagado: $1,500" | e2e | ✅ |
+| R3-E2 | Recuperar enlace | solo teclado, celular | A 390 px, llegar al campo con Tab, escribir y enviar con Enter; axe | Funciona; 0 px de desborde; sin violaciones | e2e | ✅ |
+| R3-E3 | | sin conexión | Enviar sin red; volver a enviar con red | Mensaje de conexión, el número se queda escrito, luego funciona | e2e | ✅ |
+| R3-E4 | Equipo | sesión vencida | Borrar la cookie y dar acceso | "Tu sesión terminó"; no se agrega ni se manda correo | e2e | ✅ |
+| R3-E5 | Correos | acentos y emoji | Agendar como "Ñoño Gutiérrez 🌮" con correo | El correo dice "Hola, Ñoño." | e2e | ✅ |
+| R3-N1 | Permisos | ayudante | El ayudante abre Compartir, Reportes y Equipo | Entra a Compartir; Reportes y Equipo lo regresan con aviso | e2e | ✅ |
+
+**Arreglo en las pruebas (no en la app):**
+- **El problema:** F11-E1 cerraba todas las sesiones del ayudante de prueba, así que las pruebas
+  que venían después tenían que volver a entrar. Con tantas entradas se llegaba al límite de 5
+  enlaces por hora (que funciona como debe).
+- **El arreglo:** F11-E1 ahora crea su propio ayudante desde Equipo. Las demás pruebas usan la
+  sesión guardada del ayudante.
 
 ## Lista manual (no se puede automatizar aquí)
 

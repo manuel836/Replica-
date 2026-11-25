@@ -149,10 +149,21 @@ test.describe("F11 acceso al panel", () => {
     expect((await mock.emails()).length).toBe(before);
   });
 
-  test("F11-E1 'cerrar sesión en todos lados' también sirve para el ayudante", async ({ page, newWatchedPage }) => {
-    await emailLogin(page, "ayudante@dgarden.test");
+  test("F11-E1 'cerrar sesión en todos lados' también sirve para el ayudante", async ({ page, browser, newWatchedPage }) => {
+    // Un ayudante propio de esta prueba: cerrar sus sesiones no tumba la sesión guardada del
+    // ayudante que usan las demás pruebas (y no gasta su límite de 5 enlaces por hora).
+    const email = `cierre${Date.now()}@dgarden.test`;
+    const ownerCtx = await browser.newContext({ storageState: OWNER_STATE });
+    const owner = await ownerCtx.newPage();
+    await owner.goto("/admin/equipo");
+    await owner.waitForLoadState("networkidle");
+    await owner.getByLabel("Correo del ayudante").fill(email);
+    await owner.getByRole("button", { name: "Dar acceso" }).click();
+    await expect(owner.locator("[data-sonner-toast]").filter({ hasText: email })).toBeVisible();
+    await ownerCtx.close();
+    await emailLogin(page, email);
     const other = await newWatchedPage();
-    await emailLogin(other, "ayudante@dgarden.test");
+    await emailLogin(other, email);
     await page.getByRole("link", { name: "Mi cuenta" }).click();
     await page.getByRole("button", { name: /Cerrar sesión en todos lados/ }).click();
     await expect(page).toHaveURL(/aviso=todas/);

@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { HELPER, OWNER_STATE, a11y, bookTaquiza, bookingIdByCode, emailLogin, expect, test } from "./helpers";
+import { HELPER_STATE, OWNER_STATE, a11y, bookTaquiza, bookingIdByCode, expect, test } from "./helpers";
 
 // Reporte de ventas por mes y CSV (agregados después de /replica-diff).
 
@@ -75,9 +75,8 @@ test.describe("Reportes", () => {
     const anon = await browser.newContext({ storageState: { cookies: [], origins: [] } });
     expect((await anon.request.get("/admin/reportes/csv?mes=todas")).status()).toBe(401);
     await anon.close();
-    const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const ctx = await browser.newContext({ storageState: HELPER_STATE });
     const helper = await newWatchedPage(ctx);
-    await emailLogin(helper, HELPER);
     expect((await helper.request.get("/admin/reportes/csv?mes=todas")).status()).toBe(403);
     await helper.goto("/admin/reportes");
     await expect(helper).toHaveURL(/aviso=sin-permiso/);

@@ -33,6 +33,7 @@ export default async function OpenGraphImage() {
             style={{
               width: 120,
               height: 120,
+              flexShrink: 0, // BUG-009: con un nombre largo el aro se aplastaba
               borderRadius: 60,
               border: `8px solid ${c.brand}`,
               display: "flex",

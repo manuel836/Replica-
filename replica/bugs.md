@@ -6,6 +6,8 @@ Build: `511d405`. Fecha: 2026-11-24.
 
 Resumen: **7 bugs reproducidos**: 0 S1, 1 S2, 5 S3, 1 S4. **Los 7 están corregidos.**
 Después, en `/replica-build` (reembolso parcial), apareció BUG-008 (S3), también corregido.
+En la tercera ronda de `/replica-test` (2026-11-25, después de la marca) apareció BUG-009 (S4),
+corregido. **Total: 9 bugs (0 S1, 1 S2, 6 S3, 2 S4), los 9 corregidos.**
 Cada uno tiene una prueba que falló antes de la corrección y pasa después. Suite final: 53/53 con
 datos en memoria y 55/55 con Postgres.
 
@@ -147,6 +149,23 @@ Evidence: `replica/bugs/BUG-008.png`; prueba `S12-N0`.
 Suspected cause: el reembolso se restaba dos veces: el anticipo reembolsado ya no contaba como pagado y además se restaba el reembolso.
 Status: fixed in 974332c (la prueba falló antes y pasa después). La suma vive ahora en `src/server/domain/money.ts`.
 
+### BUG-009: con un nombre largo, el aro del "DG" en la imagen para compartir se aplasta
+
+- Severity: S4
+- Flow / case: marca / R3-B3
+- Screen: imagen para compartir (`/opengraph-image`)
+- Build: 486b6b0  Browser / device: Chromium 1243 (imagen de 1200 × 630)
+
+Steps
+1. En Ajustes, poner un nombre de negocio de 60 caracteres (el máximo).
+2. Abrir `/opengraph-image`, la imagen que sale al pegar el enlace en WhatsApp o Facebook.
+
+Expected: el aro dorado con "DG" se ve redondo.
+Actual: el aro se ve ovalado (ancho ÷ alto = 0.875): el nombre largo empuja y encoge el círculo.
+Evidence: `replica/bugs/BUG-009.png`; prueba `R3-B3`, que mide el aro en la imagen generada.
+Suspected cause: el círculo no tenía `flexShrink: 0`.
+Status: fixed in the commit "test: third round" (la prueba falló antes y pasa después).
+
 ---
 
 ## Por revisar (no reproducido como bug)
@@ -163,3 +182,9 @@ Status: fixed in 974332c (la prueba falló antes y pasa después). La suma vive 
   avisar.
 - **Propuesta vencida (F04-E1):** depende del reloj (48 h). No se automatizó; se probó la regla
   en el servicio y el job.
+- **Proponer otra fecha para una taquiza ya confirmada:** hoy solo se puede en solicitudes. No es
+  un bug, es una función que falta (FX2 parcial, ver `build-log.md`). Si el cliente rechazara esa
+  propuesta, habría que devolverle el anticipo, cosa que el flujo actual no hace.
+- **Imagen para compartir en negritas:** la fuente por defecto de la imagen no trae el peso
+  "extra bold", así que el nombre sale en peso normal. Se ve bien; con la fuente de la marca
+  quedaría más fiel. Cosmético.
