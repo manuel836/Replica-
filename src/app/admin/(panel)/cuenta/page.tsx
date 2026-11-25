@@ -23,6 +23,13 @@ export default async function AccountPage() {
           <dd className="text-text">{ROLE[admin.role]}</dd>
         </div>
       </dl>
+      <p className="text-sm text-text-muted">
+        Tu enlace para agendar, su código QR y textos para redes están en{" "}
+        <a href="/admin/compartir" className="font-semibold text-accent-text underline underline-offset-4">
+          Comparte tu página
+        </a>
+        .
+      </p>
       {admin.role === "owner" && (
         <p className="text-sm text-text-muted">
           ¿Alguien más te ayuda con la agenda? Dale su propio acceso en{" "}

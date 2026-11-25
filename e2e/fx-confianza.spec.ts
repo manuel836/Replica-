@@ -221,3 +221,45 @@ test.describe("FX5 recupera tu enlace sin códigos", () => {
     await ctx.close();
   });
 });
+
+test.describe("FX6 comparte tu página", () => {
+  test("FX6-H1 enlace, QR descargable y textos listos que se copian", async ({ browser, newWatchedPage }) => {
+    const ctx = await browser.newContext({ storageState: OWNER_STATE });
+    await ctx.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const admin = await newWatchedPage(ctx);
+    await admin.goto("/admin");
+    await admin.getByRole("navigation", { name: "Panel" }).first().getByRole("link", { name: "Compartir" }).click();
+    await expect(admin.getByRole("heading", { name: "Comparte tu página", level: 1 })).toBeVisible();
+    await admin.waitForLoadState("networkidle");
+    await a11y(admin, "Compartir");
+    await expect(admin.getByText("http://localhost:3100/agendar", { exact: true })).toBeVisible();
+    await expect(admin.getByRole("img", { name: "Código QR que abre http://localhost:3100/agendar" })).toBeVisible();
+
+    const qr = await admin.request.get("/admin/compartir/qr.svg");
+    expect(qr.status()).toBe(200);
+    expect(qr.headers()["content-type"]).toContain("image/svg+xml");
+    expect(qr.headers()["content-disposition"]).toContain("qr-agendar.svg");
+    expect(await qr.text()).toContain("<svg");
+
+    await admin.getByRole("button", { name: "Copiar: Publicación para Facebook o Instagram" }).click();
+    await expect(admin.locator("[data-sonner-toast]").filter({ hasText: "Copiado" })).toBeVisible();
+    const copied = await admin.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toContain("Lázaro Cárdenas");
+    expect(copied).toContain("http://localhost:3100/agendar");
+
+    await admin.setViewportSize({ width: 390, height: 844 });
+    await admin.goto("/admin/compartir");
+    const extra = await admin.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(extra).toBeLessThanOrEqual(0);
+    await ctx.close();
+  });
+
+  test("FX6-N1 sin sesión no se descarga el QR ni se ve la página", async ({ browser }) => {
+    const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    expect((await ctx.request.get("/admin/compartir/qr.svg")).status()).toBe(401);
+    const p = await ctx.newPage();
+    await p.goto("/admin/compartir");
+    await expect(p).toHaveURL(/\/admin\/entrar/);
+    await ctx.close();
+  });
+});

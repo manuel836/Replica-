@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, Clock, MapPin, Package, Plus, Settings, UserPlus, Users, type LucideIcon } from "lucide-react";
+import { BarChart3, CalendarDays, Clock, MapPin, Package, Plus, Settings, Share2, UserPlus, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 interface NavItem {
@@ -19,6 +19,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/paquetes", label: "Paquetes", icon: Package, mobile: true },
   { href: "/admin/zonas", label: "Zonas", icon: MapPin },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
+  { href: "/admin/compartir", label: "Compartir", icon: Share2 },
   { href: "/admin/reportes", label: "Reportes", icon: BarChart3 },
   { href: "/admin/equipo", label: "Equipo", icon: UserPlus },
   { href: "/admin/ajustes", label: "Ajustes", icon: Settings, mobile: true },
